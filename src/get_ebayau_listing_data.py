@@ -8,7 +8,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 import time
-
+import streamlit as st
 
 def get_chrome_driver():
     # Set up Chrome options
@@ -21,6 +21,10 @@ def get_chrome_driver():
     # Initialize the driver
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
     return driver
+
+def close_chrome_driver(driver):
+    driver.quit()
+    pass
 
 def parse_lsts(lsts):
     cols = ['sol']
@@ -85,8 +89,10 @@ def parse_lsts(lsts):
     dfls = dfls.sort_values(by='sold_date', ascending=False)
     return dfls
 
-def get_lst_imgs(url, driver):
+@st.cache_data
+def get_lst_imgs(url, _driver):
     # go to sold listing url
+    driver = _driver
     driver.get(url)
 
     # wait until links loaded
@@ -99,12 +105,16 @@ def get_lst_imgs(url, driver):
     img_urls = [t.attrs['src'].rsplit('/', 1)[0] for t in img_container.find_all('img')]
     return img_urls
 
+@st.cache_data
+def get_ebayau_listing_data(sch_phrase, _driver):
+    if len(sch_phrase)==0:
+        return pd.DataFrame()
+    driver = _driver
 
-def get_ebayau_listing_data(sch_phrase):
     # prep url
     url = 'https://www.ebay.com.au/sch/i.html?_nkw=giratina+v+186%2F196&LH_Sold=1&LH_Complete=1&LH_PrefLoc=1&_sop=13&_ipg=60'
 
-    driver = get_chrome_driver()
+    #driver = get_chrome_driver()
     driver.get(url)
 
     # Wait a few seconds for JavaScript to load the price data
