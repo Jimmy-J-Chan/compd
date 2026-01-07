@@ -50,9 +50,19 @@ def set_tabs():
     st.session_state['tabs']['search'] = tsearch
     st.session_state['tabs']['portfolio'] = tport
 
-def _slt_lst(sch_phrase, ix):
-    st.session_state['itms'][sch_phrase]['dfls'].loc[ix, 'include_lst'] = True
+@st.dialog(" ")
+def show_more_listing_imgs(sold_url):
+    driver = st.session_state.chrome_driver
+    img_urls = get_lst_imgs(sold_url, driver)
+    img_size = '400'
+    num_imgs = len(img_urls)
 
+    if num_imgs>0:
+        for ix, img_url in enumerate(img_urls):
+            c1,c2,c3 = st.columns([0.15,0.7,0.15])
+            c2.image(f"{img_url}/s-l{img_size}.webp", caption=f"{ix+1}/{num_imgs}")
+    else:
+        st.write("No more images")
 
 
 def set_tsearch_elements():
@@ -66,13 +76,12 @@ def set_tsearch_elements():
         if len(dfls)==0:
             # show nothing
             return
-        #st.write(dfls.head())
 
         # some parsing
         dfls['include_lst'] = False
         dfls = dfls.loc[dfls['sold_date']>=st.session_state['sb']['hist_sdate']]
 
-        # save data to ss/itms - overwrites each run :TODO - test
+        # save data to ss/itms
         st.session_state['itms'][sch_phrase] = {}
         st.session_state['itms'][sch_phrase]['dfls'] = dfls
 
@@ -80,14 +89,22 @@ def set_tsearch_elements():
         tmpdf = dfls.head(3)
         st.write(tmpdf)
         for ix, lst in tmpdf.iterrows():
+            # setup container for each listing
             contr = st.container(border=True)
-            c1, c2, c3 = contr.columns([0.1,0.5,0.4]) # select, image, details
+            c11,c12,c13, c2, c3 = contr.columns([0.025,0.05,0.025,0.5,0.4]) # select, image, details
 
-            # include lst button
-            if c1.checkbox(label='', label_visibility='collapsed', key=f"{sch_phrase}_{ix}",):
+            # button to select listing
+            if c12.checkbox(label='', label_visibility='collapsed', key=f"{sch_phrase}_{ix}_c1",):
                 st.session_state['itms'][sch_phrase]['dfls'].loc[ix, 'include_lst'] = True
 
-        st.write(st.session_state['itms'][sch_phrase]['dfls'].head())
+            # show img0 - 140, 500, 960, 1600
+            img_size = '400'
+            c2.image(f"{lst['img_url0']}/s-l{img_size}.webp")
+            if c2.button('show more images', key=f"{sch_phrase}_{ix}_c2"):
+                show_more_listing_imgs(lst['sold_url'])
+
+
+        #st.write(st.session_state['itms'][sch_phrase]['dfls'].head())
 
 
 

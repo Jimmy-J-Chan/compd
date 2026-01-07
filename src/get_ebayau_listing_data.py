@@ -95,14 +95,17 @@ def get_lst_imgs(url, _driver):
     driver = _driver
     driver.get(url)
 
-    # wait until links loaded
-    element = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.CLASS_NAME, "x-item-condensed-card__message")))
+    try:
+        # wait until links loaded
+        element = WebDriverWait(driver, 7).until(EC.visibility_of_element_located((By.CLASS_NAME, "x-item-condensed-card__message")))
 
-    # get urls
-    soup = BeautifulSoup(driver.page_source, 'html.parser')
-    mstr_container = soup.find(class_="center-panel-container vi-mast")
-    img_container = mstr_container.find(class_="ux-image-grid no-scrollbar")
-    img_urls = [t.attrs['src'].rsplit('/', 1)[0] for t in img_container.find_all('img')]
+        # get urls
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
+        mstr_container = soup.find(class_="center-panel-container vi-mast")
+        img_container = mstr_container.find(class_="ux-image-grid no-scrollbar")
+        img_urls = [t.attrs['src'].rsplit('/', 1)[0] for t in img_container.find_all('img')]
+    except:
+        img_urls = []
     return img_urls
 
 @st.cache_data
