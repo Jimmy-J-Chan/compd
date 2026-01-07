@@ -29,6 +29,7 @@ def reset_session_state_params():
 
 def set_sidebar_elements():
     st.sidebar.title("*:red[Compd]* :chart_with_upwards_trend: :chart_with_downwards_trend:",)
+    st.sidebar.write('### Source: Ebay - AU')
     st.session_state['sb']['item_loc']=st.sidebar.radio("Item Location",
                                                         ['Australia only', 'Worldwide'])
     st.session_state['sb']['history_len'] = st.sidebar.radio("History",
@@ -87,21 +88,40 @@ def set_tsearch_elements():
 
         # load listing data onto search tab
         tmpdf = dfls.head(3)
+        tmpdf.loc[63,'price'] = None
         st.write(tmpdf)
         for ix, lst in tmpdf.iterrows():
             # setup container for each listing
             contr = st.container(border=True)
-            c11,c12,c13, c2, c3 = contr.columns([0.025,0.05,0.025,0.5,0.4]) # select, image, details
+            #c11,c12,c13, c2, c3 = contr.columns([0.025,0.05,0.025,0.45,0.45], gap=None, vertical_alignment='center') # select, image, details
+            c12, c2, c3 = contr.columns([0.1,0.45,0.45], gap=None, vertical_alignment='center') # select, image, details
 
             # button to select listing
             if c12.checkbox(label='', label_visibility='collapsed', key=f"{sch_phrase}_{ix}_c1",):
                 st.session_state['itms'][sch_phrase]['dfls'].loc[ix, 'include_lst'] = True
 
             # show img0 - 140, 500, 960, 1600
-            img_size = '400'
+            img_size = '300'
             c2.image(f"{lst['img_url0']}/s-l{img_size}.webp")
             if c2.button('show more images', key=f"{sch_phrase}_{ix}_c2"):
                 show_more_listing_imgs(lst['sold_url'])
+
+            # display sold info
+            p = lst['price']
+            c3.markdown(f"""
+                        <span style='color:#7D615E; font-size:1em;'>Sold  {lst['sold_date']:%d %b %Y}</span>            
+                        """, unsafe_allow_html=True)
+
+            c3.markdown(f"""
+                        <span style='color:#000000; font-size:1em;'>{lst['title']}</span>            
+                        """, unsafe_allow_html=True)
+
+            p_str = f"{lst['price_str']}" if pd.isnull(p) else f"AU ${lst['price']}"
+            c3.markdown(f"""
+                        <span style='color:#7D615E; font-size:1.5em; font-weight: bold;'>{p_str}</span>            
+                        """, unsafe_allow_html=True)
+
+            c3.markdown(f"{lst['auction_type']}")
 
 
         #st.write(st.session_state['itms'][sch_phrase]['dfls'].head())
@@ -114,6 +134,8 @@ if __name__ == '__main__':
     set_sidebar_elements()
     set_tabs()
     set_tsearch_elements()
+
+
 
     #############
     #st.write(st.session_state)
