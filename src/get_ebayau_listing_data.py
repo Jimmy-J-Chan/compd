@@ -9,6 +9,8 @@ from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 import time
 import streamlit as st
+import urllib.parse
+
 
 def get_chrome_driver(headless=True):
     # Set up Chrome options
@@ -124,8 +126,15 @@ def get_ebayau_listing_data(sch_phrase, item_loc, _driver):
         return pd.DataFrame()
     driver = _driver
 
-    # prep url - using selected params #TODO
-    url = 'https://www.ebay.com.au/sch/i.html?_nkw=giratina+v+186%2F196&LH_Sold=1&LH_Complete=1&LH_PrefLoc=1&_sop=13&_ipg=60'
+    # encode url
+    base_url = r'https://www.ebay.com.au/sch/i.html?'
+    enc_sch_phrase = urllib.parse.urlencode({"_nkw": sch_phrase,})
+    param_sold = '&LH_Sold=1&LH_Complete=1'
+    param_item_loc = '&LH_PrefLoc=1' if item_loc=='Australia only' else '&LH_PrefLoc=2' #worldwide
+    param_sort = '&_sop=13' # sort: ended recently
+    param_ipp = '&_ipg=60' # items per page
+    url = f"{base_url}{enc_sch_phrase}{param_sold}{param_item_loc}{param_sort}{param_ipp}"
+    #url = 'https://www.ebay.com.au/sch/i.html?_nkw=giratina+v+186%2F196&LH_Sold=1&LH_Complete=1&LH_PrefLoc=1&_sop=13&_ipg=60'
 
     #driver = get_chrome_driver()
     driver.get(url)
@@ -149,14 +158,14 @@ def get_ebayau_listing_data(sch_phrase, item_loc, _driver):
 
 
 if __name__ == '__main__':
-    # driver = get_chrome_driver(headless=False)
-    # sch_phrase = 'giratina v 186/196'
-    # item_loc = 'Australia only'
-    # get_ebayau_listing_data(sch_phrase, item_loc, driver)
-
     driver = get_chrome_driver(headless=False)
-    url = r'https://www.ebay.com.au/itm/187777556541?_skw=giratina+v+186%2F196&itmmeta=01KEEB37XCG43486XHR5GXVRHF&hash=item2bb86a203d:g:vG8AAeSwdVZpJjg1&itmprp=enc%3AAQAKAAAA8FkggFvd1GGDu0w3yXCmi1cGWJgSJWCKg7JEo77W2u9HcaUTer3y0L%2FdJDGnB197K8fDHhxzIIziwxB7z0g32qlCu4rEhN%2FzH7ad4ijZMQ%2F6PPh2tAqpHMxKZ4Ftgp%2FKh%2FR6ikYtMmR1%2FTE5w5MpSbtMNCbZqnGDFfO7Mj94cMqPlxgP0j7ordIyglZVHexwZVTvA5VL2DpFhMnuTDp14lJpOs9TblhGmyWPVGgqIA0jMhoLxjxInTX0wh24X1CXoZCqIJAS%2FBuyfXStD9tNI69m%2FCENHVGURERpouPsXW34NeRAeU1y0bzSgSXIwd6unQ%3D%3D%7Ctkp%3ABk9SR_T-jMvzZg'
-    img_urls = get_lst_imgs(url, driver)
+    sch_phrase = 'giratina v 186/196'
+    item_loc = 'Australia only'
+    get_ebayau_listing_data(sch_phrase, item_loc, driver)
+
+    # driver = get_chrome_driver(headless=False)
+    # url = r'https://www.ebay.com.au/itm/187777556541?_skw=giratina+v+186%2F196&itmmeta=01KEEB37XCG43486XHR5GXVRHF&hash=item2bb86a203d:g:vG8AAeSwdVZpJjg1&itmprp=enc%3AAQAKAAAA8FkggFvd1GGDu0w3yXCmi1cGWJgSJWCKg7JEo77W2u9HcaUTer3y0L%2FdJDGnB197K8fDHhxzIIziwxB7z0g32qlCu4rEhN%2FzH7ad4ijZMQ%2F6PPh2tAqpHMxKZ4Ftgp%2FKh%2FR6ikYtMmR1%2FTE5w5MpSbtMNCbZqnGDFfO7Mj94cMqPlxgP0j7ordIyglZVHexwZVTvA5VL2DpFhMnuTDp14lJpOs9TblhGmyWPVGgqIA0jMhoLxjxInTX0wh24X1CXoZCqIJAS%2FBuyfXStD9tNI69m%2FCENHVGURERpouPsXW34NeRAeU1y0bzSgSXIwd6unQ%3D%3D%7Ctkp%3ABk9SR_T-jMvzZg'
+    # img_urls = get_lst_imgs(url, driver)
     pass
 
 
