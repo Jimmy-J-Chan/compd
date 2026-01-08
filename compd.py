@@ -13,6 +13,8 @@ st.set_page_config(page_title="Compd",
 # params
 weeks2days = {'1 week':7, '2 weeks':14,'3 weeks':21,'4 weeks':28,
               '3 months':30*3, '6 months':30*6, '12 months':30*12,}
+loc_map = {'Australia only': 'AU',
+           'Worldwide': 'WRLD'}
 ss_g = ['sb', 'itms', 'pf','tabs']
 
 def set_scroll2top_button():
@@ -150,6 +152,8 @@ def set_tsearch():
             st.write('### Invalid search: enter item name and number')
             return
 
+        # use itm_id instead of sch_phrase - itm_id = {sch_phrase}_{AU/WRLD} #TODO
+        itm_id = f"{sch_phrase}_{loc_map[item_loc]}"
         if sch_phrase not in st.session_state['itms'].keys():
             st.session_state['itms'][sch_phrase] = {}
             dfls = get_ebayau_listing_data(sch_phrase, item_loc, driver)
@@ -195,6 +199,7 @@ def set_tsearch():
 
         _update_stats_board()
         # st.write(st.session_state['itms'][sch_phrase]['dfls'])
+        st.write(st.session_state.itms)
         st.write(st.session_state.pf)
 
 def set_tport():
