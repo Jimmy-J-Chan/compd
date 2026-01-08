@@ -91,6 +91,8 @@ def parse_lsts(lsts):
 
     # sort by sold date desc
     dfls = dfls.sort_values(by='sold_date', ascending=False)
+
+    # keep best matches at top?
     return dfls
 
 @st.cache_data
@@ -100,14 +102,18 @@ def get_lst_imgs(url, _driver):
     driver.get(url)
 
     try:
-        # wait until links loaded
-        element = WebDriverWait(driver, 8).until(EC.visibility_of_element_located((By.CLASS_NAME, "x-item-condensed-card__message")))
+        # wait until - gh-search-button__label
+        #element = WebDriverWait(driver, 5).until(EC.visibility_of_element_located((By.CLASS_NAME, "x-item-condensed-card__message")))
+        element = WebDriverWait(driver, 5).until(EC.visibility_of_element_located((By.CLASS_NAME, "gh-search-button__label")))
 
         # get urls
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         mstr_container = soup.find(class_="center-panel-container vi-mast")
-        img_container = mstr_container.find(class_="ux-image-grid no-scrollbar")
-        img_urls = [t.attrs['src'].rsplit('/', 1)[0] for t in img_container.find_all('img')]
+        img_container = mstr_container.find(class_="ux-image-grid no-scrollbar").find_all('img')
+
+        # src or data-src
+        img_urls = [t.attrs['src'] if 'src' in t.attrs.keys() else t.attrs['data-src'] for t in img_container]
+        img_urls = [t.rsplit('/', 1)[0] for t in img_urls]
     except:
         img_urls = []
     return img_urls
@@ -143,14 +149,14 @@ def get_ebayau_listing_data(sch_phrase, item_loc, _driver):
 
 
 if __name__ == '__main__':
-    driver = get_chrome_driver(headless=False)
-    sch_phrase = 'giratina v 186/196'
-    item_loc = 'Australia only'
-    get_ebayau_listing_data(sch_phrase, item_loc, driver)
+    # driver = get_chrome_driver(headless=False)
+    # sch_phrase = 'giratina v 186/196'
+    # item_loc = 'Australia only'
+    # get_ebayau_listing_data(sch_phrase, item_loc, driver)
 
-    # driver = get_chrome_driver()
-    # url = 'https://www.ebay.com.au/itm/317727178443?_skw=giratina+v+186%2F196&itmmeta=01KE8KFSS30HS8C6CRQE62W06X&hash=item49fa03fecb:g:--YAAeSwodFpWOh7&itmprp=enc%3AAQAKAAAA0FkggFvd1GGDu0w3yXCmi1fgrAIPHOk9DlHlaOkucmPMcTYVGz%2FKDGLukugIltBoiMCVThjlRV2c6lv52hAxYWJm60JK4Lsa2gOZ3FIo9Bh06xkGKUmfTtrjOF6f7xP9VgPNsMh62mgSebSoiRTfXqBr%2BQbIxqoCB1NKb9WBBZhDpElzgKrG9ZJpy29AZN7OxX7aiP4DdDzSx7aHjcvWtxkrL9%2B2jJyFsqeu1g9Xsdj8LVkWQIQl7PpZT%2B%2BL0ioUGXt6NWZTUsPy9Sc6OpnOjwU%3D%7Ctkp%3ABk9SR9ycv5PyZg'
-    # img_urls = get_lst_imgs(url, driver)
+    driver = get_chrome_driver(headless=False)
+    url = r'https://www.ebay.com.au/itm/187777556541?_skw=giratina+v+186%2F196&itmmeta=01KEEB37XCG43486XHR5GXVRHF&hash=item2bb86a203d:g:vG8AAeSwdVZpJjg1&itmprp=enc%3AAQAKAAAA8FkggFvd1GGDu0w3yXCmi1cGWJgSJWCKg7JEo77W2u9HcaUTer3y0L%2FdJDGnB197K8fDHhxzIIziwxB7z0g32qlCu4rEhN%2FzH7ad4ijZMQ%2F6PPh2tAqpHMxKZ4Ftgp%2FKh%2FR6ikYtMmR1%2FTE5w5MpSbtMNCbZqnGDFfO7Mj94cMqPlxgP0j7ordIyglZVHexwZVTvA5VL2DpFhMnuTDp14lJpOs9TblhGmyWPVGgqIA0jMhoLxjxInTX0wh24X1CXoZCqIJAS%2FBuyfXStD9tNI69m%2FCENHVGURERpouPsXW34NeRAeU1y0bzSgSXIwd6unQ%3D%3D%7Ctkp%3ABk9SR_T-jMvzZg'
+    img_urls = get_lst_imgs(url, driver)
     pass
 
 
