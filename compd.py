@@ -61,6 +61,8 @@ def set_session_state_groups():
     for g in ss_g:
         if g not in st.session_state.keys():
             st.session_state[g] = {}
+            if g=='pf':
+                st.session_state.pf['itms'] = {}
 
 def reset_session_state_params():
     for g in ss_g:
@@ -129,6 +131,11 @@ def set_tsearch():
             contr_stats.write(f"Price range: **\${_dfls['price'].min()} - \${_dfls['price'].max()}**")
             contr_stats.write(f"Mean: **${_dfls['price'].mean():.2f}**")
             contr_stats.write(f"Median: **${_dfls['price'].median():.2f}**")
+            if contr_stats.button('Add to Portfolio', key=f"{sch_phrase}_{ix}_statb"):
+                if sch_phrase not in st.session_state.pf['itms'].keys():
+                    st.session_state.pf['itms'][sch_phrase] = {}
+                st.session_state.pf['itms'][sch_phrase]['dfls'] = _dfls
+
 
     tb_s = st.session_state['tabs']['search']
     driver = st.session_state.chrome_driver
@@ -138,6 +145,9 @@ def set_tsearch():
 
         if len(sch_phrase) == 0:
             # show nothing
+            return
+        elif len(sch_phrase.split(' '))<2:
+            st.write('### Invalid search: enter item name and number')
             return
 
         if sch_phrase not in st.session_state['itms'].keys():
@@ -168,11 +178,6 @@ def set_tsearch():
                                          key=f"{sch_phrase}_{ix}_c1")
             st.session_state['itms'][sch_phrase]['dfls'].loc[ix, 'include_lst'] = _button_state
 
-            # _current_state = st.session_state['itms'][sch_phrase]['dfls'].loc[ix, 'include_lst']
-            # if c12.checkbox(label='', label_visibility='collapsed', key=f"{sch_phrase}_{ix}_c1", value=_current_state):
-            #     # flip between True and False when clicked
-            #     st.session_state['itms'][sch_phrase]['dfls'].loc[ix, 'include_lst'] = not _current_state
-
             # show img0 - 140, 500, 960, 1600
             img_size = '300'
             c2.image(f"{lst['img_url0']}/s-l{img_size}.webp")
@@ -187,8 +192,10 @@ def set_tsearch():
             strike_thr = True if lst['auction_type']=='Best Offer' else False
             write_style_str(parent_obj=c3, str_out=p_str, color="#7D615E", font_size="1.5em", font_w='bold', strike_through=strike_thr)
             write_style_str(parent_obj=c3, str_out=lst['auction_type'])
+
         _update_stats_board()
-        st.write(st.session_state['itms'][sch_phrase]['dfls'])
+        # st.write(st.session_state['itms'][sch_phrase]['dfls'])
+        st.write(st.session_state.pf)
 
 def set_tport():
     def _set_portfolio_board():
@@ -198,12 +205,15 @@ def set_tport():
 
     # total, num items, pcts - 90,80,75
     # display portfolio - use most recent lst as photo
-    #
-    _set_portfolio_board()
+
+
     tb_p = st.session_state['tabs']['portfolio']
-    dfls = st.session_state['itms'][sch_phrase]['dfls']
+    sch_phrases = st.session_state['itms'].keys()
     with tb_p:
-        st.dataframe(dfls)
+        _set_portfolio_board()
+        for ix, sch_phrase in enumerate(sch_phrases):
+            dfls = st.session_state['itms'][sch_phrase]['dfls']
+
 
     pass
 
@@ -217,8 +227,4 @@ if __name__ == '__main__':
     set_tsearch()
     #set_tport()
 
-
-    # space = +
-    # / = %2F
-    #
     pass
