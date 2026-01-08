@@ -6,13 +6,30 @@ from src.get_ebayau_listing_data import get_ebayau_listing_data, get_lst_imgs, g
 
 # page settings
 st.set_page_config(page_title="Compd",
-                   layout="centered",
+                   layout='wide', #"centered",
                    initial_sidebar_state='expanded',
                    )
 
 # params
-weeks2days = {'1 week':7, '2 weeks':14,'3 weeks':21,'4 weeks':28}
+weeks2days = {'1 week':7, '2 weeks':14,'3 weeks':21,'4 weeks':28,
+              '3 months':30*3, '6 months':30*6, '12 months':30*12,}
 ss_g = ['sb', 'itms', 'pf','tabs']
+
+def write_style_str(parent_obj=None, str_out=None, color=None, font_size=None, font_w=None):
+    style_str = ''
+    if color is not None:
+        style_str = style_str + f"color:{color};"
+    if font_size is not None:
+        style_str = style_str + f"font-size:{font_size};"
+    if font_w is not None:
+        style_str = style_str + f"font-weight:{font_w};"
+    html_str = f"<span style='{style_str}'>{str_out}</span>"
+
+    if parent_obj is not None:
+        parent_obj.markdown(html_str, unsafe_allow_html=True)
+    else:
+        st.markdown(html_str, unsafe_allow_html=True)
+    pass
 
 def set_chrome_driver():
     if 'chrome_driver' not in st.session_state.keys():
@@ -33,7 +50,8 @@ def set_sidebar_elements():
     st.session_state['sb']['item_loc']=st.sidebar.radio("Item Location",
                                                         ['Australia only', 'Worldwide'])
     st.session_state['sb']['history_len'] = st.sidebar.radio("History",
-                                                          ['1 week', '2 weeks','3 weeks','4 weeks'])
+                                                          ['1 week', '2 weeks','3 weeks','4 weeks',
+                                                           '3 months','6months','12months'])
     st.session_state['sb']['history_len_days'] = weeks2days[st.session_state['sb']['history_len']]
     st.session_state['sb']['today'] = pd.Timestamp.today().normalize()
     st.session_state['sb']['hist_sdate'] = st.session_state['sb']['today'] - pd.Timedelta(days=st.session_state['sb']['history_len_days'])
@@ -72,7 +90,8 @@ def set_tsearch_elements():
 
     with tb_s:
         sch_phrase = st.text_input(label='',label_visibility='collapsed', placeholder='Enter card name and number')
-        dfls = get_ebayau_listing_data(sch_phrase, driver)
+        item_loc = st.session_state['sb']['item_loc']
+        dfls = get_ebayau_listing_data(sch_phrase, item_loc, driver)
 
         if len(dfls)==0:
             # show nothing
@@ -88,7 +107,7 @@ def set_tsearch_elements():
 
         # load listing data onto search tab
         tmpdf = dfls.head(3)
-        tmpdf.loc[63,'price'] = None
+        #tmpdf.loc[63,'price'] = None
         st.write(tmpdf)
         for ix, lst in tmpdf.iterrows():
             # setup container for each listing
@@ -103,25 +122,16 @@ def set_tsearch_elements():
             # show img0 - 140, 500, 960, 1600
             img_size = '300'
             c2.image(f"{lst['img_url0']}/s-l{img_size}.webp")
-            if c2.button('show more images', key=f"{sch_phrase}_{ix}_c2"):
+            if c3.button('show more images', key=f"{sch_phrase}_{ix}_c2"):
                 show_more_listing_imgs(lst['sold_url'])
 
             # display sold info
             p = lst['price']
-            c3.markdown(f"""
-                        <span style='color:#7D615E; font-size:1em;'>Sold  {lst['sold_date']:%d %b %Y}</span>            
-                        """, unsafe_allow_html=True)
-
-            c3.markdown(f"""
-                        <span style='color:#000000; font-size:1em;'>{lst['title']}</span>            
-                        """, unsafe_allow_html=True)
-
             p_str = f"{lst['price_str']}" if pd.isnull(p) else f"AU ${lst['price']}"
-            c3.markdown(f"""
-                        <span style='color:#7D615E; font-size:1.5em; font-weight: bold;'>{p_str}</span>            
-                        """, unsafe_allow_html=True)
-
-            c3.markdown(f"{lst['auction_type']}")
+            write_style_str(parent_obj=c3, str_out=f"Sold  {lst['sold_date']:%d %b %Y}", color="#7D615E", font_size="1em")
+            write_style_str(parent_obj=c3, str_out=lst['title'], color="#000000", font_size="1em")
+            write_style_str(parent_obj=c3, str_out=p_str, color="#7D615E", font_size="1.5em", font_w='bold')
+            write_style_str(parent_obj=c3, str_out=lst['auction_type'])
 
 
         #st.write(st.session_state['itms'][sch_phrase]['dfls'].head())

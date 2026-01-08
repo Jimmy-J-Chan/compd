@@ -10,10 +10,11 @@ from bs4 import BeautifulSoup
 import time
 import streamlit as st
 
-def get_chrome_driver():
+def get_chrome_driver(headless=True):
     # Set up Chrome options
     chrome_options = Options()
-    chrome_options.add_argument("--headless")  # Uncomment to run without a visible window
+    if headless:
+        chrome_options.add_argument("--headless")  # Uncomment to run without a visible window
     chrome_options.add_argument("--disable-blink-features=AutomationControlled")
     chrome_options.add_argument("window-size=1280,800")
     chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
@@ -36,7 +37,8 @@ def parse_lsts(lsts):
         # header
         hdr = cts.find(class_="su-card-container__header")
         dfls.loc[ix, 'sold_date'] = hdr.find(class_="s-card__caption").text
-        dfls.loc[ix, 'title'] = hdr.find(class_="s-card__link").find(class_="s-card__title").contents[0].text
+        title_contents = hdr.find(class_="s-card__link").find(class_="s-card__title").contents
+        dfls.loc[ix, 'title'] = title_contents[1].text if len(title_contents)>2 else title_contents[0].text
         dfls.loc[ix,'sold_url'] = hdr.find(class_="s-card__link").attrs['href']
 
         # attributes
@@ -44,6 +46,8 @@ def parse_lsts(lsts):
         attrs_p = [t.text for t in attr_p.find_all('div')]
         dfls.loc[ix, 'price_str'] = attrs_p[0]
         dfls.loc[ix, 'auction_type_str'] = attrs_p[1]
+        from_ctry_strs = [c for c in attrs_p if c.startswith('from ')]
+        dfls.loc[ix, 'from_ctry_str'] = from_ctry_strs[0] if len(from_ctry_strs)>0 else ''
 
         attr_s = cts.find(class_="su-card-container__attributes__secondary")
         attrs_s = [t.text for t in attr_s.find_all('span')]
@@ -97,7 +101,7 @@ def get_lst_imgs(url, _driver):
 
     try:
         # wait until links loaded
-        element = WebDriverWait(driver, 7).until(EC.visibility_of_element_located((By.CLASS_NAME, "x-item-condensed-card__message")))
+        element = WebDriverWait(driver, 8).until(EC.visibility_of_element_located((By.CLASS_NAME, "x-item-condensed-card__message")))
 
         # get urls
         soup = BeautifulSoup(driver.page_source, 'html.parser')
@@ -109,12 +113,12 @@ def get_lst_imgs(url, _driver):
     return img_urls
 
 @st.cache_data
-def get_ebayau_listing_data(sch_phrase, _driver):
+def get_ebayau_listing_data(sch_phrase, item_loc, _driver):
     if len(sch_phrase)==0:
         return pd.DataFrame()
     driver = _driver
 
-    # prep url
+    # prep url - using selected params #TODO
     url = 'https://www.ebay.com.au/sch/i.html?_nkw=giratina+v+186%2F196&LH_Sold=1&LH_Complete=1&LH_PrefLoc=1&_sop=13&_ipg=60'
 
     #driver = get_chrome_driver()
@@ -130,12 +134,19 @@ def get_ebayau_listing_data(sch_phrase, _driver):
 
     # parse all listings into a df - include links to images
     dfls = parse_lsts(lsts)
+
+    # remove int sales listings if au only
+    if item_loc in ['Australia only']:
+        mask = dfls['from_ctry_str'].str.len()==0
+        dfls = dfls.loc[mask]
     return dfls
 
 
 if __name__ == '__main__':
+    driver = get_chrome_driver(headless=False)
     sch_phrase = 'giratina v 186/196'
-    get_ebayau_listing_data(sch_phrase)
+    item_loc = 'Australia only'
+    get_ebayau_listing_data(sch_phrase, item_loc, driver)
 
     # driver = get_chrome_driver()
     # url = 'https://www.ebay.com.au/itm/317727178443?_skw=giratina+v+186%2F196&itmmeta=01KE8KFSS30HS8C6CRQE62W06X&hash=item49fa03fecb:g:--YAAeSwodFpWOh7&itmprp=enc%3AAQAKAAAA0FkggFvd1GGDu0w3yXCmi1fgrAIPHOk9DlHlaOkucmPMcTYVGz%2FKDGLukugIltBoiMCVThjlRV2c6lv52hAxYWJm60JK4Lsa2gOZ3FIo9Bh06xkGKUmfTtrjOF6f7xP9VgPNsMh62mgSebSoiRTfXqBr%2BQbIxqoCB1NKb9WBBZhDpElzgKrG9ZJpy29AZN7OxX7aiP4DdDzSx7aHjcvWtxkrL9%2B2jJyFsqeu1g9Xsdj8LVkWQIQl7PpZT%2B%2BL0ioUGXt6NWZTUsPy9Sc6OpnOjwU%3D%7Ctkp%3ABk9SR9ycv5PyZg'
