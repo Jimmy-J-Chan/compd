@@ -15,7 +15,7 @@ weeks2days = {'1 week':7, '2 weeks':14,'3 weeks':21,'4 weeks':28,
               '3 months':30*3, '6 months':30*6, '12 months':30*12,}
 ss_g = ['sb', 'itms', 'pf','tabs']
 
-def write_style_str(parent_obj=None, str_out=None, color=None, font_size=None, font_w=None):
+def write_style_str(parent_obj=None, str_out=None, color=None, font_size=None, font_w=None, strike_through=False):
     style_str = ''
     if color is not None:
         style_str = style_str + f"color:{color};"
@@ -23,8 +23,10 @@ def write_style_str(parent_obj=None, str_out=None, color=None, font_size=None, f
         style_str = style_str + f"font-size:{font_size};"
     if font_w is not None:
         style_str = style_str + f"font-weight:{font_w};"
-    html_str = f"<span style='{style_str}'>{str_out}</span>"
+    if strike_through:
+        style_str = style_str + f"text-decoration: line-through;"
 
+    html_str = f"<span style='{style_str}'>{str_out}</span>"
     if parent_obj is not None:
         parent_obj.markdown(html_str, unsafe_allow_html=True)
     else:
@@ -127,14 +129,15 @@ def set_tsearch_elements():
 
             # display sold info
             p = lst['price']
-            p_str = f"{lst['price_str']}" if pd.isnull(p) else f"AU ${lst['price']}"
+            p_str = f"{lst['price_str']}".replace('$',' ') if pd.isnull(p) else f"AU ${lst['price']}"
             write_style_str(parent_obj=c3, str_out=f"Sold  {lst['sold_date']:%d %b %Y}", color="#7D615E", font_size="1em")
             write_style_str(parent_obj=c3, str_out=lst['title'], color="#000000", font_size="1em")
-            write_style_str(parent_obj=c3, str_out=p_str, color="#7D615E", font_size="1.5em", font_w='bold')
+            strike_thr = True if lst['auction_type']=='Best Offer' else False
+            write_style_str(parent_obj=c3, str_out=p_str, color="#7D615E", font_size="1.5em", font_w='bold', strike_through=strike_thr)
             write_style_str(parent_obj=c3, str_out=lst['auction_type'])
 
 
-        #st.write(st.session_state['itms'][sch_phrase]['dfls'].head())
+        #st.write(st.session_state['itms'][sch_phrase]['dfls'].head(50))
 
 
 
