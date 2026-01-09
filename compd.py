@@ -123,7 +123,7 @@ def set_tsearch():
         # contr_stats.write(f"Median: N/A")
 
     def _update_stats_board():
-        _dfls = st.session_state['itms'][sch_phrase]['dfls']
+        _dfls = st.session_state['itms'][itm_id]['dfls']
         _dfls = _dfls.loc[_dfls['include_lst']]
         num_lsts = len(_dfls)
         if num_lsts > 0:
@@ -133,10 +133,10 @@ def set_tsearch():
             contr_stats.write(f"Price range: **\${_dfls['price'].min()} - \${_dfls['price'].max()}**")
             contr_stats.write(f"Mean: **${_dfls['price'].mean():.2f}**")
             contr_stats.write(f"Median: **${_dfls['price'].median():.2f}**")
-            if contr_stats.button('Add to Portfolio', key=f"{sch_phrase}_{ix}_statb"):
-                if sch_phrase not in st.session_state.pf['itms'].keys():
-                    st.session_state.pf['itms'][sch_phrase] = {}
-                st.session_state.pf['itms'][sch_phrase]['dfls'] = _dfls
+            if contr_stats.button('Add to Portfolio', key=f"{itm_id}_{ix}_statb"):
+                if itm_id not in st.session_state.pf['itms'].keys():
+                    st.session_state.pf['itms'][itm_id] = {}
+                st.session_state.pf['itms'][itm_id]['dfls'] = _dfls
 
 
     tb_s = st.session_state['tabs']['search']
@@ -154,13 +154,13 @@ def set_tsearch():
 
         # use itm_id instead of sch_phrase - itm_id = {sch_phrase}_{AU/WRLD} #TODO
         itm_id = f"{sch_phrase}_{loc_map[item_loc]}"
-        if sch_phrase not in st.session_state['itms'].keys():
-            st.session_state['itms'][sch_phrase] = {}
+        if itm_id not in st.session_state['itms'].keys():
+            st.session_state['itms'][itm_id] = {}
             dfls = get_ebayau_listing_data(sch_phrase, item_loc, driver)
             dfls['include_lst'] = False
-            st.session_state['itms'][sch_phrase]['dfls'] = dfls
+            st.session_state['itms'][itm_id]['dfls'] = dfls
         else:
-            dfls = st.session_state['itms'][sch_phrase]['dfls']
+            dfls = st.session_state['itms'][itm_id]['dfls']
         dfls = dfls.loc[dfls['sold_date'] >= st.session_state['sb']['hist_sdate']]
 
         # add container to show price stats
@@ -178,14 +178,13 @@ def set_tsearch():
 
             # button to select listing - use on_change, update using current state of button
             # update stats box, include_lst
-            _button_state = c12.checkbox(label='', label_visibility='collapsed',
-                                         key=f"{sch_phrase}_{ix}_c1")
-            st.session_state['itms'][sch_phrase]['dfls'].loc[ix, 'include_lst'] = _button_state
+            _button_state = c12.checkbox(label='', label_visibility='collapsed', key=f"{itm_id}_{ix}_c1")
+            st.session_state['itms'][itm_id]['dfls'].loc[ix, 'include_lst'] = _button_state
 
             # show img0 - 140, 500, 960, 1600
             img_size = '300'
             c2.image(f"{lst['img_url0']}/s-l{img_size}.webp")
-            if c3.button('show more images', key=f"{sch_phrase}_{ix}_c2"):
+            if c3.button('show more images', key=f"{itm_id}_{ix}_c2"):
                 show_more_listing_imgs(lst['sold_url'])
 
             # display sold info
@@ -199,8 +198,8 @@ def set_tsearch():
 
         _update_stats_board()
         # st.write(st.session_state['itms'][sch_phrase]['dfls'])
-        st.write(st.session_state.itms)
-        st.write(st.session_state.pf)
+        # st.write(st.session_state.itms)
+        # st.write(st.session_state.pf)
 
 def set_tport():
     def _set_portfolio_board():

@@ -87,8 +87,9 @@ def parse_lsts(lsts):
     dfls.loc[mask, 'price'] = dfls.loc[mask, 'price_str'].str.replace('AU $','').str.replace(',','').astype(float)
     # if price drops
     mask = (dfls['num_p']>1) & (dfls['auction_type_str']=='Best Offer accepted')
-    dfls.loc[mask,'price'] = dfls.loc[mask]['price_str'].str.split('AU', expand=True)[1]
-    dfls.loc[mask, 'price'] = dfls.loc[mask,'price'].str.replace(r'[$, ]', '', regex=True).astype(float)
+    if mask.sum()>0:
+        dfls.loc[mask,'price'] = dfls.loc[mask]['price_str'].str.split('AU', expand=True)[1]
+        dfls.loc[mask, 'price'] = dfls.loc[mask,'price'].str.replace(r'[$, ]', '', regex=True).astype(float)
     dfls['price'] = dfls['price'].astype(float)
 
     # sort by sold date desc
@@ -159,7 +160,8 @@ def get_ebayau_listing_data(sch_phrase, item_loc, _driver):
 
 if __name__ == '__main__':
     driver = get_chrome_driver(headless=False)
-    sch_phrase = 'giratina v 186/196'
+    #sch_phrase = 'giratina v 186/196'
+    sch_phrase = 'mew ex 232'
     item_loc = 'Australia only'
     get_ebayau_listing_data(sch_phrase, item_loc, driver)
 
