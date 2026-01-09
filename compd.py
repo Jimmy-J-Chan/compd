@@ -74,10 +74,10 @@ def set_sidebar_elements():
     st.sidebar.title("*:red[Compd]* :chart_with_upwards_trend: :chart_with_downwards_trend:",)
     st.sidebar.write('### Source: Ebay - AU')
     st.session_state['sb']['item_loc']=st.sidebar.radio("Item Location",
-                                                        ['Australia only', 'Worldwide'])
+                                                        ['Australia only', 'Worldwide'], index=0)
     st.session_state['sb']['history_len'] = st.sidebar.radio("History",
                                                           ['1 week', '2 weeks','3 weeks','4 weeks',
-                                                           '3 months','6months','12months'])
+                                                           '3 months','6months','12months'], index=3)
     st.session_state['sb']['history_len_days'] = weeks2days[st.session_state['sb']['history_len']]
     st.session_state['sb']['today'] = pd.Timestamp.today().normalize()
     st.session_state['sb']['hist_sdate'] = st.session_state['sb']['today'] - pd.Timedelta(days=st.session_state['sb']['history_len_days'])
@@ -137,7 +137,7 @@ def set_tsearch():
                 if itm_id not in st.session_state.pf['itms'].keys():
                     st.session_state.pf['itms'][itm_id] = {}
                 st.session_state.pf['itms'][itm_id]['dfls'] = _dfls
-
+                st.toast(f"Saved to Portfolio", icon="✔️")
 
     tb_s = st.session_state['tabs']['search']
     driver = st.session_state.chrome_driver
@@ -161,6 +161,11 @@ def set_tsearch():
             st.session_state['itms'][itm_id]['dfls'] = dfls
         else:
             dfls = st.session_state['itms'][itm_id]['dfls']
+
+        if len(dfls)==0:
+            st.write(f'### No listings returned for: {sch_phrase} - {loc_map[item_loc]}')
+            return
+
         dfls = dfls.loc[dfls['sold_date'] >= st.session_state['sb']['hist_sdate']]
 
         # add container to show price stats

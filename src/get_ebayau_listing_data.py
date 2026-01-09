@@ -144,9 +144,14 @@ def get_ebayau_listing_data(sch_phrase, item_loc, _driver):
     time.sleep(3)
 
     # Get the page source and hand it over to BeautifulSoup
-    soup = BeautifulSoup(driver.page_source, 'html.parser')
-    all_lsts = soup.find_all('ul', class_='srp-results srp-list clearfix')[0].find_all('li')
-    lsts = [l for l in all_lsts if 'id' in l.attrs.keys()]
+    try:
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
+        all_lsts = soup.find_all('ul', class_='srp-results srp-list clearfix')[0].find_all('li')
+        lsts = [l for l in all_lsts if 'id' in l.attrs.keys()]
+        if len(lsts)==0:
+            return pd.DataFrame()
+    except:
+        return pd.DataFrame()
 
     # parse all listings into a df - include links to images
     dfls = parse_lsts(lsts)
