@@ -15,6 +15,7 @@ weeks2days = {'1 week':7, '2 weeks':14,'3 weeks':21,'4 weeks':28,
               '3 months':30*3, '6 months':30*6, '12 months':30*12,}
 loc_map = {'Australia only': 'AU',
            'Worldwide': 'WRLD'}
+loc_inv_map = {v:k for k,v in loc_map.items()}
 ss_g = ['sb', 'itms', 'pf','tabs']
 
 def set_scroll2top_button():
@@ -81,6 +82,7 @@ def set_sidebar_elements():
     st.session_state['sb']['history_len_days'] = weeks2days[st.session_state['sb']['history_len']]
     st.session_state['sb']['today'] = pd.Timestamp.today().normalize()
     st.session_state['sb']['hist_sdate'] = st.session_state['sb']['today'] - pd.Timedelta(days=st.session_state['sb']['history_len_days'])
+    st.session_state['sb']['ipg'] = 60 if st.session_state['sb']['item_loc']=='Australia only' else 120
 
     # st.write(st.session_state['sb']['today'])
     # st.write(st.session_state['sb']['hist_sdate'])
@@ -110,7 +112,10 @@ def show_more_listing_imgs(sold_url):
     else:
         st.write("No more images")
 
-
+@st.dialog(" ")
+def show_pf_itm_listing(itm_id):
+    dfls = st.session_state.pf['itms'][itm_id]['dfls']
+    st.dataframe(dfls, column_order=['sold_date','title','price','auction_type','from_ctry_str'], hide_index=True)
 
 def set_tsearch():
     def _set_stats_board():
@@ -127,16 +132,30 @@ def set_tsearch():
         _dfls = _dfls.loc[_dfls['include_lst']]
         num_lsts = len(_dfls)
         if num_lsts > 0:
+            stats = {'date_range_str': f"Date range: **{_dfls['sold_date'].min():%d %b %Y} - {_dfls['sold_date'].max():%d %b %Y}**",
+                     'listings_str': f"Listings: **{num_lsts}**",
+                     'price_range_str': f"Price range: **\${_dfls['price'].min()} - \${_dfls['price'].max()}**",
+                     'mean_str': f"Mean: **${_dfls['price'].mean():.2f}**",
+                     'median_str': f"Median: **${_dfls['price'].median():.2f}**",
+                     'dr_start': dfls['sold_date'].min(),
+                     'dr_end': dfls['sold_date'].max(),
+                     'num_listings': num_lsts,
+                     'price_min': _dfls['price'].min(),
+                     'price_max': _dfls['price'].max(),
+                     'mean': _dfls['price'].mean(),
+                     'median': _dfls['price'].median(),
+                     }
             contr_stats = st.session_state.contr_stats
-            contr_stats.write(f"Date range: **{_dfls['sold_date'].min():%d %b %Y} - {_dfls['sold_date'].max():%d %b %Y}**")
-            contr_stats.write(f"Listings: **{num_lsts}**")
-            contr_stats.write(f"Price range: **\${_dfls['price'].min()} - \${_dfls['price'].max()}**")
-            contr_stats.write(f"Mean: **${_dfls['price'].mean():.2f}**")
-            contr_stats.write(f"Median: **${_dfls['price'].median():.2f}**")
+            contr_stats.write(stats['date_range_str'])
+            contr_stats.write(stats['listings_str'])
+            contr_stats.write(stats['price_range_str'])
+            contr_stats.write(stats['mean_str'])
+            contr_stats.write(stats['median_str'])
             if contr_stats.button('Add to Portfolio', key=f"{itm_id}_{ix}_statb"):
                 if itm_id not in st.session_state.pf['itms'].keys():
                     st.session_state.pf['itms'][itm_id] = {}
                 st.session_state.pf['itms'][itm_id]['dfls'] = _dfls
+                st.session_state.pf['itms'][itm_id]['stats'] = stats
                 st.toast(f"Saved to Portfolio", icon="✔️")
 
     tb_s = st.session_state['tabs']['search']
@@ -144,7 +163,7 @@ def set_tsearch():
     with tb_s:
         sch_phrase = st.text_input(label='',label_visibility='collapsed', placeholder='Enter card name and number')
         item_loc = st.session_state['sb']['item_loc']
-
+        ipg = st.session_state['sb']['ipg']
         if len(sch_phrase) == 0:
             # show nothing
             return
@@ -156,9 +175,11 @@ def set_tsearch():
         itm_id = f"{sch_phrase}_{loc_map[item_loc]}"
         if itm_id not in st.session_state['itms'].keys():
             st.session_state['itms'][itm_id] = {}
-            dfls = get_ebayau_listing_data(sch_phrase, item_loc, driver)
+            dfls = get_ebayau_listing_data(sch_phrase, item_loc, ipg, driver)
             dfls['include_lst'] = False
             st.session_state['itms'][itm_id]['dfls'] = dfls
+            st.session_state['itms'][itm_id]['sch_phrase'] = sch_phrase
+            st.session_state['itms'][itm_id]['item_loc'] = item_loc
         else:
             dfls = st.session_state['itms'][itm_id]['dfls']
 
@@ -179,11 +200,11 @@ def set_tsearch():
             # setup container for each listing
             contr = st.container(border=True)
             #c11,c12,c13, c2, c3 = contr.columns([0.025,0.05,0.025,0.45,0.45], gap=None, vertical_alignment='center') # select, image, details
-            c12, c2, c3 = contr.columns([0.1,0.45,0.45], gap=None, vertical_alignment='center') # select, image, details
+            c1, c2, c3 = contr.columns([0.1,0.45,0.45], gap=None, vertical_alignment='center') # select, image, details
 
             # button to select listing - use on_change, update using current state of button
             # update stats box, include_lst
-            _button_state = c12.checkbox(label='', label_visibility='collapsed', key=f"{itm_id}_{ix}_c1")
+            _button_state = c1.checkbox(label='', label_visibility='collapsed', key=f"{itm_id}_{ix}_c1")
             st.session_state['itms'][itm_id]['dfls'].loc[ix, 'include_lst'] = _button_state
 
             # show img0 - 140, 500, 960, 1600
@@ -200,6 +221,7 @@ def set_tsearch():
             strike_thr = True if lst['auction_type']=='Best Offer' else False
             write_style_str(parent_obj=c3, str_out=p_str, color="#7D615E", font_size="1.5em", font_w='bold', strike_through=strike_thr)
             write_style_str(parent_obj=c3, str_out=lst['auction_type'])
+            write_style_str(parent_obj=c3, str_out=f"{lst['from_ctry_str']}", color="#7D615E", font_size="1em")
 
         _update_stats_board()
         # st.write(st.session_state['itms'][sch_phrase]['dfls'])
@@ -212,18 +234,73 @@ def set_tport():
         st.session_state.contr_pf = contr_pf
         contr_pf.write('#### Portfolio')
 
-    # total, num items, pcts - 90,80,75
-    # display portfolio - use most recent lst as photo
+    def _update_portfolio_board():
+        dfpf = st.session_state.pf['dfpf']
+        if dfpf['include_itm'].sum()>0:
+            contr_pf = st.session_state.contr_pf
+            total = (dfpf[agg_by]*dfpf['include_itm']).sum()
+            contr_pf.write(f"Total: **${total:.2f}**")
+            for pct in pcts:
+                _str = f"{int(pct*100)}%"
+                contr_pf.write(f"{_str}: **${total*pct:.2f}**")
+        pass
 
+    # include_itm, , num items, pcts - 90,80,75
+    # display portfolio - use most recent lst as photo
+    agg_by = 'mean'
+    pcts = [0.9, 0.80, 0.75, 0.7]
+
+    # so no error at the beginning
+    itm_ids = st.session_state.pf['itms'].keys()
+    # st.write(itm_ids)
+    # st.write(st.session_state.pf)
+    if len(itm_ids)==0:
+        return
+
+    # dfpf - itm_id, mean, median,
+    dfpf = [pd.Series(st.session_state.pf['itms'][itm_id]['stats']).to_frame(itm_id) for itm_id in itm_ids]
+    dfpf = pd.concat(dfpf, axis=1).T
+    dfpf['include_itm'] = False
+    st.session_state.pf['dfpf'] = dfpf
+    #st.write(dfpf)
+
+    # # pf stat calc
+    # st.session_state.pf['total'] = dfpf[agg_by].sum()
+    # for pct in pcts:
+    #     st.session_state.pf[f"{int(pct * 100)}%"] = st.session_state.pf['total'] * pct
 
     tb_p = st.session_state['tabs']['portfolio']
-    sch_phrases = st.session_state['itms'].keys()
     with tb_p:
         _set_portfolio_board()
-        for ix, sch_phrase in enumerate(sch_phrases):
-            dfls = st.session_state['itms'][sch_phrase]['dfls']
 
+        # display itms in pf
+        for itm_id, row in dfpf.iterrows():
+            stats = st.session_state.pf['itms'][itm_id]['stats']
+            dfls = st.session_state.pf['itms'][itm_id]['dfls']
 
+            contr = st.container(border=True)
+            c1, c2, c3 = contr.columns([0.1,0.45,0.45], gap=None, vertical_alignment='center') # select, image, details
+
+            _button_state = c1.checkbox(label='', label_visibility='collapsed', key=f"pf_{itm_id}_c1", value=True)
+            #c1.write(_button_state)
+            st.session_state.pf['dfpf'].loc[itm_id, 'include_itm'] = _button_state
+
+            # use first image from dfls
+            img_size = '200'
+            c2.image(f"{dfls['img_url0'].iloc[0]}/s-l{img_size}.webp")
+
+            # compd itm info
+            if c3.button('Show Listings', key=f"pf_{itm_id}_c3"):
+                show_pf_itm_listing(itm_id)
+
+            sch_phrase = st.session_state['itms'][itm_id]['sch_phrase']
+            item_loc = st.session_state['itms'][itm_id]['item_loc']
+            c3.write(f"{sch_phrase}")
+            c3.write(f"${row[agg_by]:.2f}")
+            c3.write(f"{item_loc}")
+
+        #st.write(st.session_state.pf['dfpf'])
+        _update_portfolio_board()
     pass
 
 
@@ -234,6 +311,6 @@ if __name__ == '__main__':
     set_sidebar_elements()
     set_tabs()
     set_tsearch()
-    #set_tport()
+    set_tport()
 
     pass
