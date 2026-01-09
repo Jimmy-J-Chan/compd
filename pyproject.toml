@@ -1,10 +1,10 @@
 [project]
-name = "compd"
+name = "compd-au"
 version = "0.1.0"
 description = "Ebay last solds price aggregator: interface to easily pool last solds to determine market price"
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = [
-    "pandas>=2.0.0",
-    "streamlit>=1.52.1",
-]
+#dependencies = [
+#    "pandas>=2.0.0",
+#    "streamlit>=1.52.1",
+#]
