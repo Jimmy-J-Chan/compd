@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 import time
 import streamlit as st
 import urllib.parse
+from webdriver_manager.core.os_manager import ChromeType
 
 
 def get_chrome_driver(headless=True):
@@ -22,7 +23,7 @@ def get_chrome_driver(headless=True):
     chrome_options.add_argument("window-size=1280,800")
     chrome_options.add_argument("--disable-gpu")
 
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()),
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()),
                               options=chrome_options)
     return driver
 
