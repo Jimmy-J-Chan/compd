@@ -105,7 +105,7 @@ def set_tabs():
 def show_more_listing_imgs(sold_url):
     driver = st.session_state.chrome_driver
     img_urls = get_lst_imgs(sold_url, driver)
-    img_size = img_size_ts # '400'
+    img_size = img_size_ts # '400' # fit to screen width
     num_imgs = len(img_urls)
 
     if num_imgs>0:
@@ -308,6 +308,11 @@ def set_tport():
 
 
 if __name__ == '__main__':
+    from src.get_screen_info import get_client_screen_data
+    dim_screen = get_client_screen_data('1')
+    st.write(dim_screen)
+
+
     set_scroll2top_button()
     set_chrome_driver()
     set_session_state_groups()
@@ -316,4 +321,6 @@ if __name__ == '__main__':
     set_tsearch()
     set_tport()
 
+    dim_screen = get_client_screen_data('2')
+    st.write(dim_screen)
     pass
