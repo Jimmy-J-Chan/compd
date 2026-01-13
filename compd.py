@@ -308,6 +308,9 @@ def set_tport():
 
 
 if __name__ == '__main__':
+    import os
+    st.write(st.context.url)
+
     from src.get_screen_info import get_client_screen_data
     dim_screen = get_client_screen_data('1')
     st.write(dim_screen)

@@ -23,8 +23,11 @@ def get_chrome_driver(headless=True):
     chrome_options.add_argument("window-size=1280,800")
     chrome_options.add_argument("--disable-gpu")
 
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()),
-                              options=chrome_options)
+    if st.context.url in ['http://localhost:8501']:
+        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()),options=chrome_options)
+    else:
+        driver = webdriver.Chrome(service=Service(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()),
+                                  options=chrome_options)
     return driver
 
 def close_chrome_driver(driver):
