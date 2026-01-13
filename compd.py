@@ -6,8 +6,8 @@ from src.get_ebayau_listing_data import get_ebayau_listing_data, get_lst_imgs, g
 
 # page settings
 st.set_page_config(page_title="Compd",
-                   #layout='wide',
-                   layout="centered",
+                   layout='wide',
+                   #layout="centered",
                    initial_sidebar_state='expanded',
                    )
 
@@ -18,6 +18,8 @@ loc_map = {'Australia only': 'AU',
            'Worldwide': 'WRLD'}
 loc_inv_map = {v:k for k,v in loc_map.items()}
 ss_g = ['sb', 'itms', 'pf','tabs']
+img_size_ts = '140' # 400
+
 
 def set_scroll2top_button():
     st.html("<div id='top'></div>")
@@ -103,7 +105,7 @@ def set_tabs():
 def show_more_listing_imgs(sold_url):
     driver = st.session_state.chrome_driver
     img_urls = get_lst_imgs(sold_url, driver)
-    img_size = '400'
+    img_size = img_siz_ts # '400'
     num_imgs = len(img_urls)
 
     if num_imgs>0:
@@ -209,7 +211,7 @@ def set_tsearch():
             st.session_state['itms'][itm_id]['dfls'].loc[ix, 'include_lst'] = _button_state
 
             # show img0 - 140, 500, 960, 1600
-            img_size = '300'
+            img_size = img_size_ts # '300'
             c2.image(f"{lst['img_url0']}/s-l{img_size}.webp")
             if c3.button('show more images', key=f"{itm_id}_{ix}_c2"):
                 show_more_listing_imgs(lst['sold_url'])
