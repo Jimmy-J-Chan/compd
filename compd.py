@@ -6,7 +6,8 @@ from src.get_ebayau_listing_data import get_ebayau_listing_data, get_lst_imgs, g
 
 # page settings
 st.set_page_config(page_title="Compd",
-                   layout='wide', #"centered",
+                   #layout='wide',
+                   layout="centered",
                    initial_sidebar_state='expanded',
                    )
 
