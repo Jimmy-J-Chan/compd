@@ -105,7 +105,7 @@ def set_tabs():
 def show_more_listing_imgs(sold_url):
     driver = st.session_state.chrome_driver
     img_urls = get_lst_imgs(sold_url, driver)
-    img_size = img_siz_ts # '400'
+    img_size = img_size_ts # '400'
     num_imgs = len(img_urls)
 
     if num_imgs>0:
