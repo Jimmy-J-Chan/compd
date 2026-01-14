@@ -36,23 +36,7 @@ def set_scroll2top_button():
         """,
         unsafe_allow_html=True
     )
-    # st.html("""
-    #     <a href="#top" style="
-    #         position: fixed;
-    #         bottom: 20px;
-    #         right: 20px;
-    #         background-color: #ff4b4b;
-    #         color: white;
-    #         text-decoration: none;
-    #         padding: 10px 15px;
-    #         border-radius: 50px;
-    #         font-weight: bold;
-    #         box-shadow: 2px 2px 10px rgba(0,0,0,0.2);
-    #         z-index: 9999;
-    #     ">
-    #         ↑ Top
-    #     </a>
-    # """)
+
 
 def write_style_str(parent_obj=None, str_out=None, color=None, font_size=None, font_w=None, strike_through=False,
                     hyperlink=None):
