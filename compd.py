@@ -8,6 +8,8 @@ st.set_page_config(page_title="Compd",
                    #layout='wide',
                    layout="centered",
                    initial_sidebar_state='expanded',
+                   page_icon='./logo/compd_logo_clear.png',
+                   #page_icon='./logo/icon_compd_logo_clear.png',
                    )
 
 
