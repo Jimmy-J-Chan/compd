@@ -11,23 +11,20 @@ st.set_page_config(page_title="Compd",
                    page_icon='./logo/compd_logo_white.png',
                    )
 
-def set_page_app_icon():
+def set_page_app_icon(image_path):
     import base64
-    def get_base64_image(image_path):
-        with open(image_path, "rb") as img_file:
-            return base64.b64encode(img_file.read()).decode()
+    with open(image_path, "rb") as f:
+        data = base64.b64encode(f.read()).decode()
 
-    # Convert your local 'logo.png' to string
-    img_base64 = get_base64_image('./logo/compd_logo_white.png')
-
-    st.markdown(
-        f"""
-        <head>
-            <link rel="apple-touch-icon" href="data:image/png;base64,{img_base64}">
-        </head>
-        """,
-        unsafe_allow_html=True
-    )
+    # This script targets the parent window (the main app shell)
+    # rather than just the streamlit iframe.
+    js = f"""
+        var link = window.parent.document.createElement('link');
+        link.rel = 'apple-touch-icon';
+        link.href = 'data:image/png;base64,{data}';
+        window.parent.document.getElementsByTagName('head')[0].appendChild(link);
+    """
+    st.components.v1.html(f"<script>{js}</script>", height=0)
 
 
 def set_scroll2top_button():
@@ -330,7 +327,7 @@ if __name__ == '__main__':
     # dim_screen = get_client_screen_data('1')
     # st.write(dim_screen)
 
-    set_page_app_icon()
+    set_page_app_icon('./logo/compd_logo_white.png')
     set_scroll2top_button()
     set_chrome_driver()
     set_session_state_groups()
