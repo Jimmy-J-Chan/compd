@@ -8,11 +8,26 @@ st.set_page_config(page_title="Compd",
                    #layout='wide',
                    layout="centered",
                    initial_sidebar_state='expanded',
-                   #page_icon='./logo/compd_logo_white.png',
-                   #page_icon='./logo/icon_compd_logo_clear.png',
-                   page_icon=':chart_with_upwards_trend:'
+                   page_icon='./logo/compd_logo_white.png',
                    )
 
+def set_page_app_icon():
+    import base64
+    def get_base64_image(image_path):
+        with open(image_path, "rb") as img_file:
+            return base64.b64encode(img_file.read()).decode()
+
+    # Convert your local 'logo.png' to string
+    img_base64 = get_base64_image('./logo/compd_logo_white.png')
+
+    st.markdown(
+        f"""
+        <head>
+            <link rel="apple-touch-icon" href="data:image/png;base64,{img_base64}">
+        </head>
+        """,
+        unsafe_allow_html=True
+    )
 
 
 def set_scroll2top_button():
@@ -315,6 +330,7 @@ if __name__ == '__main__':
     # dim_screen = get_client_screen_data('1')
     # st.write(dim_screen)
 
+    set_page_app_icon()
     set_scroll2top_button()
     set_chrome_driver()
     set_session_state_groups()
