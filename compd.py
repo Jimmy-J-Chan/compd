@@ -14,23 +14,45 @@ st.set_page_config(page_title="Compd",
 
 def set_scroll2top_button():
     st.html("<div id='top'></div>")
-    st.html("""
+    st.markdown(
+        """
         <a href="#top" style="
             position: fixed;
-            bottom: 20px;
-            right: 20px;
+            top: 85%;
+            right: 0px;
+            transform: translateY(-50%);
             background-color: #ff4b4b;
             color: white;
             text-decoration: none;
             padding: 10px 15px;
-            border-radius: 50px;
+            border-radius: 50px
             font-weight: bold;
-            box-shadow: 2px 2px 10px rgba(0,0,0,0.2);
+            box-shadow: -2px 2px 10px rgba(0,0,0,0.2);
             z-index: 9999;
+            text-combine-upright: all;
         ">
             ↑ Top
         </a>
-    """)
+        """,
+        unsafe_allow_html=True
+    )
+    # st.html("""
+    #     <a href="#top" style="
+    #         position: fixed;
+    #         bottom: 20px;
+    #         right: 20px;
+    #         background-color: #ff4b4b;
+    #         color: white;
+    #         text-decoration: none;
+    #         padding: 10px 15px;
+    #         border-radius: 50px;
+    #         font-weight: bold;
+    #         box-shadow: 2px 2px 10px rgba(0,0,0,0.2);
+    #         z-index: 9999;
+    #     ">
+    #         ↑ Top
+    #     </a>
+    # """)
 
 def write_style_str(parent_obj=None, str_out=None, color=None, font_size=None, font_w=None, strike_through=False,
                     hyperlink=None):
