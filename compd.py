@@ -93,6 +93,10 @@ def set_sidebar_elements():
     st.session_state['sb']['history_len'] = st.sidebar.radio("History",
                                                           ['1 week', '2 weeks','3 weeks','4 weeks',
                                                            '3 months','6months','12months'], index=3)
+
+    st.sidebar.markdown('<hr style="margin: 0px; border: 1px solid #ddd;">', unsafe_allow_html=True)
+    st.session_state['sb']['rm_best_offer'] = st.sidebar.toggle("Remove Best Offers", value=False)
+
     st.session_state['sb']['history_len_days'] = weeks2days[st.session_state['sb']['history_len']]
     st.session_state['sb']['today'] = pd.Timestamp.today().normalize()
     st.session_state['sb']['hist_sdate'] = st.session_state['sb']['today'] - pd.Timedelta(days=st.session_state['sb']['history_len_days'])
@@ -218,7 +222,11 @@ def set_tsearch():
 
         # load listing data onto search tab
         tmpdf = dfls #.head(3)
-        #st.write(tmpdf)
+
+        # remove best offers
+        if st.session_state['sb']['rm_best_offer']:
+            tmpdf = tmpdf.loc[tmpdf['auction_type']!='Best Offer']
+
         for ix, lst in tmpdf.iterrows():
             # setup container for each listing
             contr = st.container(border=True)
