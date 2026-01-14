@@ -11,20 +11,32 @@ st.set_page_config(page_title="Compd",
                    page_icon='./logo/compd_logo_white.png',
                    )
 
-def set_page_app_icon(image_path):
+def set_page_app_icon():
     import base64
+
+    image_path = r'./logo/compd_logo_white.png'
     with open(image_path, "rb") as f:
         data = base64.b64encode(f.read()).decode()
 
-    # This script targets the parent window (the main app shell)
-    # rather than just the streamlit iframe.
-    js = f"""
-        var link = window.parent.document.createElement('link');
-        link.rel = 'apple-touch-icon';
-        link.href = 'data:image/png;base64,{data}';
-        window.parent.document.getElementsByTagName('head')[0].appendChild(link);
-    """
-    st.components.v1.html(f"<script>{js}</script>", height=0)
+    # This script breaks out of the iframe and forces the icon into the top-level HTML
+    st.components.v1.html(
+        f"""
+            <script>
+                const head = window.parent.document.getElementsByTagName('head')[0];
+
+                // Remove any existing apple-touch-icons to prevent conflicts
+                const existingIcons = window.parent.document.querySelectorAll("link[rel='apple-touch-icon']");
+                existingIcons.forEach(icon => icon.remove());
+
+                // Create and add your new custom icon
+                const newIcon = window.parent.document.createElement('link');
+                newIcon.rel = 'apple-touch-icon';
+                newIcon.href = 'data:image/png;base64,{data}';
+                head.appendChild(newIcon);
+            </script>
+            """,
+        height=0,
+    )
 
 
 def set_scroll2top_button():
@@ -327,7 +339,7 @@ if __name__ == '__main__':
     # dim_screen = get_client_screen_data('1')
     # st.write(dim_screen)
 
-    set_page_app_icon('./logo/compd_logo_white.png')
+    set_page_app_icon()
     set_scroll2top_button()
     set_chrome_driver()
     set_session_state_groups()
