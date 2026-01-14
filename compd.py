@@ -18,13 +18,14 @@ def set_scroll2top_button():
         """
         <a href="#top" style="
             position: fixed;
-            top: 85%;
+            top: 90%;
             right: 0px;
             transform: translateY(-50%);
             background-color: #ff4b4b;
             color: white;
             text-decoration: none;
             padding: 10px 15px;
+            border-radius: 10px 0px 0px 10px; /* Rounded only on the left side */
             border-radius: 50px
             font-weight: bold;
             box-shadow: -2px 2px 10px rgba(0,0,0,0.2);
