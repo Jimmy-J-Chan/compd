@@ -1,24 +1,15 @@
 import streamlit as st
 import pandas as pd
-from pandas.core.ops.missing import mask_zero_div_zero
-
-from src.get_ebayau_listing_data import get_ebayau_listing_data, get_lst_imgs, get_chrome_driver, close_chrome_driver
+from src.get_ebayau_listing_data import get_ebayau_listing_data, get_lst_imgs, get_chrome_driver
+from conf.config import *
 
 # page settings
 st.set_page_config(page_title="Compd",
-                   layout='wide',
-                   #layout="centered",
+                   #layout='wide',
+                   layout="centered",
                    initial_sidebar_state='expanded',
                    )
 
-# params
-weeks2days = {'1 week':7, '2 weeks':14,'3 weeks':21,'4 weeks':28,
-              '3 months':30*3, '6 months':30*6, '12 months':30*12,}
-loc_map = {'Australia only': 'AU',
-           'Worldwide': 'WRLD'}
-loc_inv_map = {v:k for k,v in loc_map.items()}
-ss_g = ['sb', 'itms', 'pf','tabs']
-img_size_ts = '140' # 400
 
 
 def set_scroll2top_button():
@@ -118,7 +109,15 @@ def show_more_listing_imgs(sold_url):
 @st.dialog(" ")
 def show_pf_itm_listing(itm_id):
     dfls = st.session_state.pf['itms'][itm_id]['dfls']
-    st.dataframe(dfls, column_order=['sold_date','title','price','auction_type','from_ctry_str'], hide_index=True)
+    st.dataframe(dfls,
+                 column_order=['sold_date','title','price','auction_type','from_ctry_str'],
+                 column_config={'sold_date':'Sold Date',
+                                'title': 'Listing',
+                                'price': st.column_config.NumberColumn('Price', format="$ %.1f"),
+                                'auction_type': 'Auction Type',
+                                'from_ctry_str': 'From Country',
+                                },
+                 hide_index=True)
 
 def set_tsearch():
     def _set_stats_board():
@@ -308,9 +307,9 @@ def set_tport():
 
 
 if __name__ == '__main__':
-    from src.get_screen_info import get_client_screen_data
-    dim_screen = get_client_screen_data('1')
-    st.write(dim_screen)
+    # from src.get_screen_info import get_client_screen_data
+    # dim_screen = get_client_screen_data('1')
+    # st.write(dim_screen)
 
     set_scroll2top_button()
     set_chrome_driver()
@@ -319,7 +318,4 @@ if __name__ == '__main__':
     set_tabs()
     set_tsearch()
     set_tport()
-
-    dim_screen = get_client_screen_data('2')
-    st.write(dim_screen)
     pass
