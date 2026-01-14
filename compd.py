@@ -8,7 +8,7 @@ st.set_page_config(page_title="Compd",
                    #layout='wide',
                    layout="centered",
                    initial_sidebar_state='expanded',
-                   page_icon='./logo/compd_logo_clear.png',
+                   page_icon='./logo/compd_logo_white.png',
                    #page_icon='./logo/icon_compd_logo_clear.png',
                    )
 
@@ -68,7 +68,8 @@ def reset_session_state_params():
         st.session_state[g] = {}
 
 def set_sidebar_elements():
-    st.sidebar.title("*:red[Compd]* :chart_with_upwards_trend: :chart_with_downwards_trend:",)
+    #st.sidebar.title("*:red[Compd]* :chart_with_upwards_trend: :chart_with_downwards_trend:",)
+    st.sidebar.image('./logo/compd_logo_white.png',)
     st.sidebar.write('### Source: Ebay - AU')
     st.session_state['sb']['item_loc']=st.sidebar.radio("Item Location",
                                                         ['Australia only', 'Worldwide'], index=0)
