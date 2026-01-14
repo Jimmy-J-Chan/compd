@@ -32,7 +32,8 @@ def set_scroll2top_button():
         </a>
     """)
 
-def write_style_str(parent_obj=None, str_out=None, color=None, font_size=None, font_w=None, strike_through=False):
+def write_style_str(parent_obj=None, str_out=None, color=None, font_size=None, font_w=None, strike_through=False,
+                    hyperlink=None):
     style_str = ''
     if color is not None:
         style_str = style_str + f"color:{color};"
@@ -44,6 +45,10 @@ def write_style_str(parent_obj=None, str_out=None, color=None, font_size=None, f
         style_str = style_str + f"text-decoration: line-through;"
 
     html_str = f"<span style='{style_str}'>{str_out}</span>"
+
+    if hyperlink is not None:
+        html_str = f'<a href="{hyperlink}" target="_blank" style="text-decoration: none;">{html_str}</a>'
+
     if parent_obj is not None:
         parent_obj.markdown(html_str, unsafe_allow_html=True)
     else:
@@ -231,7 +236,7 @@ def set_tsearch():
             p = lst['price']
             p_str = f"{lst['price_str']}".replace('$',' ') if pd.isnull(p) else f"AU ${lst['price']}"
             write_style_str(parent_obj=c3, str_out=f"Sold  {lst['sold_date']:%d %b %Y}", color="#7D615E", font_size="1em")
-            write_style_str(parent_obj=c3, str_out=lst['title'], color="#000000", font_size="1em")
+            write_style_str(parent_obj=c3, str_out=lst['title'], color="#000000", font_size="1em", hyperlink=lst['sold_url'])
             strike_thr = True if lst['auction_type']=='Best Offer' else False
             write_style_str(parent_obj=c3, str_out=p_str, color="#7D615E", font_size="1.5em", font_w='bold', strike_through=strike_thr)
             write_style_str(parent_obj=c3, str_out=lst['auction_type'])
