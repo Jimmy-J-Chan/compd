@@ -11,33 +11,6 @@ st.set_page_config(page_title="Compd",
                    page_icon='./logo/compd_logo_white.png',
                    )
 
-def set_page_app_icon():
-    import base64
-
-    image_path = r'./logo/compd_logo_white.png'
-    with open(image_path, "rb") as f:
-        data = base64.b64encode(f.read()).decode()
-
-    # This script breaks out of the iframe and forces the icon into the top-level HTML
-    st.components.v1.html(
-        f"""
-            <script>
-                const head = window.parent.document.getElementsByTagName('head')[0];
-
-                // Remove any existing apple-touch-icons to prevent conflicts
-                const existingIcons = window.parent.document.querySelectorAll("link[rel='apple-touch-icon']");
-                existingIcons.forEach(icon => icon.remove());
-
-                // Create and add your new custom icon
-                const newIcon = window.parent.document.createElement('link');
-                newIcon.rel = 'apple-touch-icon';
-                newIcon.href = 'data:image/png;base64,{data}';
-                head.appendChild(newIcon);
-            </script>
-            """,
-        height=0,
-    )
-
 
 def set_scroll2top_button():
     st.html("<div id='top'></div>")
@@ -81,21 +54,29 @@ def set_chrome_driver():
     if 'chrome_driver' not in st.session_state.keys():
         st.session_state.chrome_driver = get_chrome_driver()
 
-def set_session_state_groups():
+def set_session_state_groups(reset_params=False):
     for g in ss_g:
         if g not in st.session_state.keys():
             st.session_state[g] = {}
             if g=='pf':
                 st.session_state.pf['itms'] = {}
 
-def reset_session_state_params():
-    for g in ss_g:
+def reset_session_state_params_data():
+    # only reset itms and pf, keep sb params and tabs
+    if 'sch_phrase_in' in st.session_state.keys():
+        st.session_state.sch_phrase_in = ''
+    for g in ['itms', 'pf']:
         st.session_state[g] = {}
+        if g == 'pf':
+            st.session_state.pf['itms'] = {}
 
 def set_sidebar_elements():
     #st.sidebar.title("*:red[Compd]* :chart_with_upwards_trend: :chart_with_downwards_trend:",)
     st.sidebar.image('./logo/compd_logo_white.png',)
-    st.sidebar.write('### Source: Ebay - AU')
+    if st.sidebar.button('Clear Data'):
+        reset_session_state_params_data()
+    st.sidebar.markdown('<hr style="margin: 0px; border: 1px solid #ddd;">', unsafe_allow_html=True)
+    st.sidebar.write('__Source__: Ebay - AU')
     st.session_state['sb']['item_loc']=st.sidebar.radio("Item Location",
                                                         ['Australia only', 'Worldwide'], index=0)
     st.session_state['sb']['history_len'] = st.sidebar.radio("History",
@@ -181,7 +162,7 @@ def set_tsearch():
             contr_stats.write(stats['price_range_str'])
             contr_stats.write(stats['mean_str'])
             contr_stats.write(stats['median_str'])
-            if contr_stats.button('Add to Portfolio', key=f"{itm_id}_{ix}_statb"):
+            if contr_stats.button('Add to Portfolio'):#, key=f"{itm_id}_{ix}_statb"):
                 if itm_id not in st.session_state.pf['itms'].keys():
                     st.session_state.pf['itms'][itm_id] = {}
                 st.session_state.pf['itms'][itm_id]['dfls'] = _dfls
@@ -191,7 +172,8 @@ def set_tsearch():
     tb_s = st.session_state['tabs']['search']
     driver = st.session_state.chrome_driver
     with tb_s:
-        sch_phrase = st.text_input(label='',label_visibility='collapsed', placeholder='Enter card name and number')
+        sch_phrase = st.text_input(label='', label_visibility='collapsed',
+                                   placeholder='Enter card name and number', key="sch_phrase_in")
         item_loc = st.session_state['sb']['item_loc']
         ipg = st.session_state['sb']['ipg']
         if len(sch_phrase) == 0:
@@ -236,12 +218,14 @@ def set_tsearch():
             # update stats box, include_lst
             _button_state = c1.checkbox(label='', label_visibility='collapsed', key=f"{itm_id}_{ix}_c1")
             st.session_state['itms'][itm_id]['dfls'].loc[ix, 'include_lst'] = _button_state
+            delattr(st.session_state, f"{itm_id}_{ix}_c1")
 
             # show img0 - 140, 500, 960, 1600
             img_size = img_size_ts # '300'
             c2.image(f"{lst['img_url0']}/s-l{img_size}.webp")
             if c3.button('show more images', key=f"{itm_id}_{ix}_c2"):
                 show_more_listing_imgs(lst['sold_url'])
+            delattr(st.session_state, f"{itm_id}_{ix}_c2")
 
             # display sold info
             p = lst['price']
@@ -254,6 +238,7 @@ def set_tsearch():
             write_style_str(parent_obj=c3, str_out=f"{lst['from_ctry_str']}", color="#7D615E", font_size="1em")
 
         _update_stats_board()
+        # st.write(st.session_state)
         # st.write(st.session_state['itms'][sch_phrase]['dfls'])
         # st.write(st.session_state.itms)
         # st.write(st.session_state.pf)
@@ -314,6 +299,8 @@ def set_tport():
             _button_state = c1.checkbox(label='', label_visibility='collapsed', key=f"pf_{itm_id}_c1", value=True)
             #c1.write(_button_state)
             st.session_state.pf['dfpf'].loc[itm_id, 'include_itm'] = _button_state
+            delattr(st.session_state, f"pf_{itm_id}_c1")
+
 
             # use first image from dfls
             img_size = '200'
@@ -322,6 +309,7 @@ def set_tport():
             # compd itm info
             if c3.button('Show Listings', key=f"pf_{itm_id}_c3"):
                 show_pf_itm_listing(itm_id)
+            delattr(st.session_state, f"pf_{itm_id}_c3")
 
             sch_phrase = st.session_state['itms'][itm_id]['sch_phrase']
             item_loc = st.session_state['itms'][itm_id]['item_loc']
@@ -339,7 +327,6 @@ if __name__ == '__main__':
     # dim_screen = get_client_screen_data('1')
     # st.write(dim_screen)
 
-    set_page_app_icon()
     set_scroll2top_button()
     set_chrome_driver()
     set_session_state_groups()
@@ -347,4 +334,6 @@ if __name__ == '__main__':
     set_tabs()
     set_tsearch()
     set_tport()
+
+    #st.write(st.session_state)
     pass
