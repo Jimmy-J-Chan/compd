@@ -1,8 +1,7 @@
-import streamlit as st
 from streamlit_js_eval import streamlit_js_eval
 
 
-def get_client_screen_data(key=''):
+def get_screen_data(key=''):
     dim_screen = {}
     dim_screen['screen_width'] = streamlit_js_eval(js_expressions='screen.width', key=f"w_{key}")
     dim_screen['screen_height'] = streamlit_js_eval(js_expressions='screen.height', key=f"h_{key}")
@@ -15,5 +14,5 @@ def get_client_screen_data(key=''):
     return dim_screen
 
 if __name__ == '__main__':
-    get_client_screen_data()
+    get_screen_data()
     pass
