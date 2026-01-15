@@ -148,14 +148,12 @@ def set_tsearch():
         contr_stats = st.container(border=True)
         st.session_state.contr_stats = contr_stats
         contr_stats.write('#### Selected listings')
-        # contr_stats.write(f"Date range: N/A - N/A")
-        # contr_stats.write(f"Price range: N/A - N/A")
-        # contr_stats.write(f"Mean: N/A")
-        # contr_stats.write(f"Median: N/A")
 
     def _update_stats_board():
+        # df: selected listings, match history param
         _dfls = st.session_state['itms'][itm_id]['dfls']
         _dfls = _dfls.loc[_dfls['include_lst']]
+        _dfls = _dfls.loc[_dfls['sold_date'] >= st.session_state['sb']['hist_sdate']]
         num_lsts = len(_dfls)
         if num_lsts > 0:
             stats = {'date_range_str': f"Date range: **{_dfls['sold_date'].min():%d %b %Y} - {_dfls['sold_date'].max():%d %b %Y}**",
@@ -214,6 +212,7 @@ def set_tsearch():
             st.write(f'### No listings returned for: {sch_phrase} - {loc_map[item_loc]}')
             return
 
+        # trim to match history param
         dfls = dfls.loc[dfls['sold_date'] >= st.session_state['sb']['hist_sdate']]
 
         # add container to show price stats
@@ -226,6 +225,9 @@ def set_tsearch():
         # remove best offers
         if st.session_state['sb']['rm_best_offer']:
             tmpdf = tmpdf.loc[tmpdf['auction_type']!='Best Offer']
+
+        # show selected listings param
+
 
         for ix, lst in tmpdf.iterrows():
             # setup container for each listing
@@ -257,10 +259,7 @@ def set_tsearch():
             write_style_str(parent_obj=c3, str_out=f"{lst['from_ctry_str']}", color="#7D615E", font_size="1em")
 
         _update_stats_board()
-        # st.write(st.session_state)
-        # st.write(st.session_state['itms'][sch_phrase]['dfls'])
-        # st.write(st.session_state.itms)
-        # st.write(st.session_state.pf)
+
 
 def set_tport():
     def _set_portfolio_board():
