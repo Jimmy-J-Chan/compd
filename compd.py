@@ -96,6 +96,7 @@ def set_sidebar_elements():
 
     st.sidebar.markdown('<hr style="margin: 0px; border: 1px solid #ddd;">', unsafe_allow_html=True)
     st.session_state['sb']['rm_best_offer'] = st.sidebar.toggle("Remove Best Offers", value=False)
+    st.session_state['sb']['show_sltd_lsts'] = st.sidebar.toggle("Selected Listings Only", value=False)
 
     st.session_state['sb']['history_len_days'] = weeks2days[st.session_state['sb']['history_len']]
     st.session_state['sb']['today'] = pd.Timestamp.today().normalize()
@@ -196,7 +197,7 @@ def set_tsearch():
             st.write('### Invalid search: enter item name and number')
             return
 
-        # use itm_id instead of sch_phrase - itm_id = {sch_phrase}_{AU/WRLD} #TODO
+        # use itm_id instead of sch_phrase - itm_id = {sch_phrase}_{AU/WRLD}
         itm_id = f"{sch_phrase}_{loc_map[item_loc]}"
         if itm_id not in st.session_state['itms'].keys():
             st.session_state['itms'][itm_id] = {}
@@ -226,9 +227,13 @@ def set_tsearch():
         if st.session_state['sb']['rm_best_offer']:
             tmpdf = tmpdf.loc[tmpdf['auction_type']!='Best Offer']
 
-        # show selected listings param
+        # show selected listings only
+        if st.session_state['sb']['show_sltd_lsts']:
+            tmpdf = tmpdf.loc[tmpdf['include_lst']]
+            if len(tmpdf)==0:
+                return
 
-
+        #st.write(tmpdf)
         for ix, lst in tmpdf.iterrows():
             # setup container for each listing
             contr = st.container(border=True)
@@ -237,7 +242,7 @@ def set_tsearch():
 
             # button to select listing - use on_change, update using current state of button
             # update stats box, include_lst
-            _button_state = c1.checkbox(label='', label_visibility='collapsed', key=f"{itm_id}_{ix}_c1")
+            _button_state = c1.checkbox(label='', label_visibility='collapsed', key=f"{itm_id}_{ix}_c1", value=lst['include_lst'])
             st.session_state['itms'][itm_id]['dfls'].loc[ix, 'include_lst'] = _button_state
             delattr(st.session_state, f"{itm_id}_{ix}_c1")
 
@@ -259,6 +264,8 @@ def set_tsearch():
             write_style_str(parent_obj=c3, str_out=f"{lst['from_ctry_str']}", color="#7D615E", font_size="1em")
 
         _update_stats_board()
+
+        #st.write(st.session_state['itms'][itm_id]['dfls'])
 
 
 def set_tport():
