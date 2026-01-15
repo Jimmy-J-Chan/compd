@@ -1,4 +1,5 @@
 import streamlit as st
+import altair as alt
 import pandas as pd
 from src.get_ebayau_listing_data import get_ebayau_listing_data, get_lst_imgs, get_chrome_driver
 from conf.config import *
@@ -97,7 +98,9 @@ def set_sidebar_elements():
     st.sidebar.markdown('<hr style="margin: 0px; border: 1px solid #ddd;">', unsafe_allow_html=True)
     st.session_state['sb']['rm_best_offer'] = st.sidebar.toggle("Remove Best Offers", value=False)
     st.session_state['sb']['show_sltd_lsts'] = st.sidebar.toggle("Selected Listings Only", value=False)
+    st.session_state['sb']['show_pchart'] = st.sidebar.toggle("Show Price Chart", value=False)
 
+    # calc some params
     st.session_state['sb']['history_len_days'] = weeks2days[st.session_state['sb']['history_len']]
     st.session_state['sb']['today'] = pd.Timestamp.today().normalize()
     st.session_state['sb']['hist_sdate'] = st.session_state['sb']['today'] - pd.Timedelta(days=st.session_state['sb']['history_len_days'])
@@ -144,6 +147,30 @@ def show_pf_itm_listing(itm_id):
                                 },
                  hide_index=True)
 
+def show_price_plot(dfls_selected, contr):
+    x_col_name = 'sold_date'
+    y_col_name = 'price'
+    x_axis_min = dfls_selected[x_col_name].min()
+    x_axis_max = dfls_selected[x_col_name].max()
+    y_axis_min = dfls_selected[y_col_name].min()
+    y_axis_max = dfls_selected[y_col_name].max()
+
+    x_axis = alt.X(f'{x_col_name}:T', scale=alt.Scale(domain=[x_axis_min, x_axis_max]))
+    y_axis = alt.Y(f'{y_col_name}:Q', scale=alt.Scale(domain=[y_axis_min, y_axis_max]))
+
+    # line
+    line = alt.Chart(dfls_selected).mark_line(color='blue').encode(x=x_axis, y=y_axis)
+
+    # scatter
+    scatter = alt.Chart(dfls_selected).mark_point(color='red', size=60).encode(x=x_axis, y=y_axis,
+                                                                               tooltip=['x', y_col_name])
+
+    # plot
+    if contr is not None:
+        contr.altair_chart(line + scatter, use_container_width=True)
+    else:
+        st.altair_chart(line + scatter, use_container_width=True)
+
 def set_tsearch():
     def _set_stats_board():
         contr_stats = st.container(border=True)
@@ -183,6 +210,47 @@ def set_tsearch():
                 st.session_state.pf['itms'][itm_id]['stats'] = stats
                 st.toast(f"Saved to Portfolio", icon="✔️")
 
+    def _set_pchart_container():
+        contr_pchart = st.container(border=True)
+        st.session_state.contr_pchart = contr_pchart
+
+    def _update_price_chart():
+        # df: selected listings, match history param
+        _dfls = st.session_state['itms'][itm_id]['dfls']
+        _dfls = _dfls.loc[_dfls['include_lst']]
+        _dfls = _dfls.loc[_dfls['sold_date'] >= st.session_state['sb']['hist_sdate']]
+
+        contr_pchart = st.session_state.contr_pchart
+        if len(_dfls)>1:
+            # calc median by date
+            price_median = _dfls.groupby('sold_date')['price'].median()
+            _dfls['price_median'] = _dfls['sold_date'].map(price_median)
+
+
+            x_col_name = 'sold_date'
+            y_scatter_col_name = 'price'
+            y_line_col_name = 'price_median'
+            x_axis_min = _dfls[x_col_name].min() - pd.Timedelta(days=1)
+            x_axis_max = _dfls[x_col_name].max() + pd.Timedelta(days=1)
+            y_axis_min = int(_dfls[y_scatter_col_name].min() * 0.9)
+            y_axis_max = int(_dfls[y_scatter_col_name].max() * 1.1)
+
+            x_axis = alt.X(f'{x_col_name}:T', scale=alt.Scale(domain=[x_axis_min, x_axis_max]), title=None)#, axis=alt.Axis(grid=False))
+            y_scatter_axis = alt.Y(f'{y_scatter_col_name}:Q', scale=alt.Scale(domain=[y_axis_min, y_axis_max]), title=None, axis=alt.Axis(grid=False))
+            y_line_axis = alt.Y(f'{y_line_col_name}:Q', scale=alt.Scale(domain=[y_axis_min, y_axis_max]), title=None, axis=alt.Axis(grid=False))
+
+            line = alt.Chart(_dfls).mark_line(color='blue', size=2,
+                                              opacity=0.5,).encode(x=x_axis, y=y_line_axis)
+            scatter = alt.Chart(_dfls).mark_point(color='red', size=200,
+                                                  filled=False, opacity=0.5,
+                                                  strokeWidth=2).encode(x=x_axis, y=y_scatter_axis)
+            contr_pchart.altair_chart(scatter + line, use_container_width=True, theme=None)
+        else:
+            write_style_str(parent_obj=contr_pchart,
+                            str_out="Select more listings to generate price chart",
+                            color="red", font_size="1em", font_w='bold')
+
+
     tb_s = st.session_state['tabs']['search']
     driver = st.session_state.chrome_driver
     with tb_s:
@@ -216,25 +284,26 @@ def set_tsearch():
         # trim to match history param
         dfls = dfls.loc[dfls['sold_date'] >= st.session_state['sb']['hist_sdate']]
 
-        # add container to show price stats
-        # date range, mean, median, price range: min, max
-        _set_stats_board()
-
-        # load listing data onto search tab
-        tmpdf = dfls #.head(3)
-
         # remove best offers
         if st.session_state['sb']['rm_best_offer']:
-            tmpdf = tmpdf.loc[tmpdf['auction_type']!='Best Offer']
+            dfls = dfls.loc[dfls['auction_type']!='Best Offer']
 
         # show selected listings only
         if st.session_state['sb']['show_sltd_lsts']:
-            tmpdf = tmpdf.loc[tmpdf['include_lst']]
-            if len(tmpdf)==0:
+            dfls = dfls.loc[dfls['include_lst']]
+            if len(dfls)==0:
                 return
 
-        #st.write(tmpdf)
-        for ix, lst in tmpdf.iterrows():
+        # price chart
+        if st.session_state['sb']['show_pchart']:
+            _set_pchart_container()
+
+        # add container to show price stats
+        _set_stats_board()
+
+        # display listings
+        #st.write(dfls)
+        for ix, lst in dfls.iterrows():
             # setup container for each listing
             contr = st.container(border=True)
             #c11,c12,c13, c2, c3 = contr.columns([0.025,0.05,0.025,0.45,0.45], gap=None, vertical_alignment='center') # select, image, details
@@ -263,6 +332,8 @@ def set_tsearch():
             write_style_str(parent_obj=c3, str_out=lst['auction_type'])
             write_style_str(parent_obj=c3, str_out=f"{lst['from_ctry_str']}", color="#7D615E", font_size="1em")
 
+        if st.session_state['sb']['show_pchart']:
+            _update_price_chart()
         _update_stats_board()
 
         #st.write(st.session_state['itms'][itm_id]['dfls'])
@@ -361,4 +432,5 @@ if __name__ == '__main__':
     set_tport()
 
     #st.write(st.session_state)
+
     pass
