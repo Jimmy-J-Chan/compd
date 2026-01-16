@@ -300,7 +300,7 @@ def set_tport():
 
 
 def compd_mobile():
-    st.write('compd - mobile')
+    #st.write('compd - mobile')
 
     set_scroll2top_button()
     set_chrome_driver()
