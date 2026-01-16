@@ -9,7 +9,7 @@ from src.get_ebayau_listing_data import get_ebayau_listing_data, get_lst_imgs
 
 # page settings
 st.set_page_config(page_title="Compd",
-                   layout="centered",
+                   layout="wide",
                    initial_sidebar_state='expanded',
                    page_icon='./logo/compd_logo_white.png',
                    )
