@@ -205,7 +205,7 @@ def set_tsearch():
 
         # display parameters - mobile
         c1_colw = [0.05,0.5, 0.45]
-        c2_img_size = 300
+        c2_img_size = 200
 
         # display data
         dfls = dfls.head(10)
