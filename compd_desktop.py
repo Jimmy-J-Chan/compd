@@ -359,7 +359,6 @@ def compd_desktop():
     set_tport()
 
 if __name__ == '__main__':
-    #reduce_md_spacing('0.5em')
     set_scroll2top_button()
     set_chrome_driver()
     set_session_state_groups()

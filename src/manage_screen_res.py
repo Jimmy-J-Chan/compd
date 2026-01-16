@@ -1,17 +1,26 @@
 from streamlit_js_eval import streamlit_js_eval
 import streamlit as st
 
-def get_screen_data(key=''):
-    dim_screen = {}
-    dim_screen['screen_width'] = streamlit_js_eval(js_expressions='screen.width', key=f"w_{key}")
-    dim_screen['screen_height'] = streamlit_js_eval(js_expressions='screen.height', key=f"h_{key}")
+def get_screen_width():
+    # dim_screen = {}
+    # dim_screen['screen_width'] = streamlit_js_eval(js_expressions='screen.width', key=f"w_{key}")
+    # dim_screen['screen_height'] = streamlit_js_eval(js_expressions='screen.height', key=f"h_{key}")
+    #
+    # dim_screen['win_iwidth'] = streamlit_js_eval(js_expressions='window.innerWidth', key=f"iw_{key}")
+    # dim_screen['win_iheight'] = streamlit_js_eval(js_expressions='window.innerHeight', key=f"ih_{key}")
+    #
+    # dim_screen['win_owidth'] = streamlit_js_eval(js_expressions='window.outerWidth', key=f"ow_{key}")
+    # dim_screen['win_oheight'] = streamlit_js_eval(js_expressions='window.outerHeight', key=f"oh_{key}")
 
-    dim_screen['win_iwidth'] = streamlit_js_eval(js_expressions='window.innerWidth', key=f"iw_{key}")
-    dim_screen['win_iheight'] = streamlit_js_eval(js_expressions='window.innerHeight', key=f"ih_{key}")
-
-    dim_screen['win_owidth'] = streamlit_js_eval(js_expressions='window.outerWidth', key=f"ow_{key}")
-    dim_screen['win_oheight'] = streamlit_js_eval(js_expressions='window.outerHeight', key=f"oh_{key}")
-    return dim_screen
+    st.markdown("""
+        <style>
+        div.element-container:has(iframe[title="streamlit_js_eval.streamlit_js_eval"]) {
+            display: none;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+    screen_w = streamlit_js_eval(js_expressions='window.outerWidth', key='MOBILE_CHECK')
+    return screen_w
 
 def set_screen_data(mobile_res=False):
     if mobile_res:
