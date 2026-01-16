@@ -275,14 +275,15 @@ def set_tport():
             total = (dfpf[agg_by]*dfpf['include_itm']).sum()
             contr_pf.write(f"Total: **${total:.2f}**")
 
-            c1,c2 = contr_pf.columns(2)
+            c11 = contr_pf.container(horizontal=True)
             for pct in pcts_c1:
                 _str = f"{int(pct*100)}%"
-                c1.write(f"{_str}: **${total*pct:.2f}**")
+                c11.write(f"{_str}: **${total*pct:.2f}**")
 
+            c22 = contr_pf.container(horizontal=True)
             for pct in pcts_c2:
                 _str = f"{int(pct*100)}%"
-                c2.write(f"{_str}: **${total*pct:.2f}**")
+                c22.write(f"{_str}: **${total*pct:.2f}**")
         pass
 
     # include_itm, , num items, pcts - 90,80,75
