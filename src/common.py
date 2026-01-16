@@ -13,7 +13,7 @@ def set_scroll2top_button():
         """
         <a href="#top" style="
             position: fixed;
-            top: 85%;
+            top: 50%;
             right: 0px;
             transform: translateY(-50%);
             background-color: #ff4b4b;
