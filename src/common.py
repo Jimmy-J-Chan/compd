@@ -89,3 +89,4 @@ def reduce_md_spacing(gap='0px'):
 
 def insert_spacer():
     st.markdown('<hr style="margin: 0px; border: 1px solid #ddd;">', unsafe_allow_html=True)
+    pass
