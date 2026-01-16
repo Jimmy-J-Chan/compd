@@ -226,7 +226,7 @@ def set_tsearch():
 
             # show img0
             c2_key = f"{itm_id}_{ix}_c2"
-            c2.image(f"{lst['img_url0']}/s-l{c2_img_size}.webp", width='stretch')
+            c2.image(f"{lst['img_url0']}/s-l{c2_img_size}.webp", width='content')
             if c2.button('show more images', key=c2_key, width='content'):
                 show_more_listing_imgs(lst['sold_url'])
 
