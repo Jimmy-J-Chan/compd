@@ -258,16 +258,16 @@ def set_tsearch():
 
 if __name__ == '__main__':
     # manage screen resolution
-    set_screen_data(mobile_res=True)
-    set_screen_contr()
-
-    # app contents
-    with st.session_state.screen_contr:
-        reduce_md_spacing('0.05em')
-        set_scroll2top_button()
-        set_chrome_driver()
-        set_session_state_groups()
-        set_sidebar_elements()
-        set_tabs()
-        set_tsearch()
-        # set_tport()
+    # set_screen_data(mobile_res=True)
+    # set_screen_contr()
+    #
+    # # app contents
+    # with st.session_state.screen_contr:
+    reduce_md_spacing('0.05em')
+    set_scroll2top_button()
+    set_chrome_driver()
+    set_session_state_groups()
+    set_sidebar_elements()
+    set_tabs()
+    set_tsearch()
+    # set_tport()
