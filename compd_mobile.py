@@ -8,7 +8,7 @@ from src.common import set_scroll2top_button, set_chrome_driver, write_style_str
 from src.get_ebayau_listing_data import get_ebayau_listing_data, get_lst_imgs
 
 from compd_desktop import (set_session_state_groups, set_sidebar_elements, set_tabs,
-                           show_more_listing_imgs, show_pf_itm_listing, set_tport)
+                           show_more_listing_imgs, show_pf_itm_listing)
 
 # page settings
 st.set_page_config(page_title="Compd",
@@ -202,6 +202,102 @@ def set_tsearch():
 
 
     pass
+
+def set_tport():
+    def _set_portfolio_board():
+        contr_pf = st.container(border=True)
+        st.session_state.contr_pf = contr_pf
+        contr_pf.write('#### Portfolio')
+
+    def _update_portfolio_board():
+        dfpf = st.session_state.pf['dfpf']
+        if dfpf['include_itm'].sum()>0:
+            contr_pf = st.session_state.contr_pf
+            total = (dfpf[agg_by]*dfpf['include_itm']).sum()
+            contr_pf.write(f"Total: **${total:.2f}**")
+
+            c11 = contr_pf.container(horizontal=True)
+            for pct in pcts_c1:
+                _str = f"{int(pct*100)}%"
+                c11.write(f"{_str}: **${total*pct:.2f}**")
+
+            c22 = contr_pf.container(horizontal=True)
+            for pct in pcts_c2:
+                _str = f"{int(pct*100)}%"
+                c22.write(f"{_str}: **${total*pct:.2f}**")
+        pass
+
+    # include_itm, , num items, pcts - 90,80,75
+    # display portfolio - use most recent lst as photo
+    agg_by = 'mean'
+    pcts_c1 = [0.9, 0.80, 0.70]
+    pcts_c2 = [0.85, 0.75, 0.6]
+
+    # so no error at the beginning
+    itm_ids = st.session_state.pf['itms'].keys()
+    # st.write(itm_ids)
+    # st.write(st.session_state.pf)
+    if len(itm_ids)==0:
+        return
+
+    # dfpf - itm_id, mean, median,
+    dfpf = [pd.Series(st.session_state.pf['itms'][itm_id]['stats']).to_frame(itm_id) for itm_id in itm_ids]
+    dfpf = pd.concat(dfpf, axis=1).T
+    dfpf['include_itm'] = False
+    st.session_state.pf['dfpf'] = dfpf
+
+    tb_p = st.session_state['tabs']['portfolio']
+    with tb_p:
+        _set_portfolio_board()
+
+        # display itms in pf
+        for itm_id, row in dfpf.iterrows():
+            stats = st.session_state.pf['itms'][itm_id]['stats']
+            dfls = st.session_state.pf['itms'][itm_id]['dfls']
+
+            # container - write horizontally
+            contr = st.container(border=True)
+            contr_1 = contr.container(horizontal=True,
+                                      horizontal_alignment="left", vertical_alignment="center",
+                                      gap='small')
+
+            # select button
+            pf_c1_key = f"pf_{itm_id}_c1"
+            _button_state = contr_1.checkbox(label='', label_visibility='collapsed', key=pf_c1_key, value=True)
+            st.session_state.pf['dfpf'].loc[itm_id, 'include_itm'] = _button_state
+
+            # use first image from dfls
+            img_size = '140'
+            contr_1.image(f"{dfls['img_url0'].iloc[0]}/s-l{img_size}.webp")
+
+            # write vertically now
+            contr_2 = contr_1.container(horizontal=False,
+                                      horizontal_alignment="left", vertical_alignment="center",
+                                      gap="small")
+
+            sch_phrase = st.session_state['itms'][itm_id]['sch_phrase']
+            item_loc = st.session_state['itms'][itm_id]['item_loc']
+            contr_2.write(f"{sch_phrase}")
+            contr_2.write(f"${row[agg_by]:.2f}")
+            contr_2.write(f"{item_loc}")
+
+            # compd itm info
+            pf_c3_key = f"pf_{itm_id}_c3"
+            if contr_2.button('Show Listings', key=pf_c3_key):
+                show_pf_itm_listing(itm_id)
+
+            # delete some keys
+            delattr(st.session_state, pf_c1_key)
+            delattr(st.session_state, pf_c3_key)
+
+        # update container above
+        _update_portfolio_board()
+    pass
+
+
+
+
+
 
 def compd_mobile():
     #st.write('compd - mobile')
