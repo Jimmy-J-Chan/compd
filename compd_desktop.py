@@ -350,6 +350,8 @@ def set_tport():
 
 
 def compd_desktop():
+    st.write('compd - desktop')
+
     set_scroll2top_button()
     set_chrome_driver()
     set_session_state_groups()

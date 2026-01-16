@@ -204,6 +204,8 @@ def set_tsearch():
     pass
 
 def compd_mobile():
+    st.write('compd - mobile')
+
     set_scroll2top_button()
     set_chrome_driver()
     set_session_state_groups()
