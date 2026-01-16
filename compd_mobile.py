@@ -158,7 +158,7 @@ def set_tsearch():
             contr = st.container(border=True)
             contr_1 = contr.container(horizontal=True,
                                       horizontal_alignment="left", vertical_alignment="center",
-                                      gap="small") # select, image
+                                      gap=None) # select, image
 
             # select button
             c1_key = f"{itm_id}_{ix}_c1"
