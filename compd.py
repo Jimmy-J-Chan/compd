@@ -221,7 +221,7 @@ def set_tsearch():
         c2_img_size = 300
 
         # display data
-        dfls = dfls.head(5)
+        #dfls = dfls.head(5)
         for ix, lst in dfls.iterrows():
             # container
             contr = st.container(border=True, horizontal=True)
