@@ -231,14 +231,14 @@ def set_tsearch():
                 show_more_listing_imgs(lst['sold_url'])
 
             # details
-            p = lst['price']
-            p_str = f"{lst['price_str']}".replace('$',' ') if pd.isnull(p) else f"AU ${lst['price']}"
-            write_style_str(parent_obj=c3, str_out=f"Sold  {lst['sold_date']:%d %b %Y}", color="#7D615E", font_size="1em")
-            write_style_str(parent_obj=c3, str_out=lst['title'], color="#000000", font_size="1em", hyperlink=lst['sold_url'])
-            strike_thr = True if lst['auction_type']=='Best Offer' else False
-            write_style_str(parent_obj=c3, str_out=p_str, color="#7D615E", font_size="1.5em", font_w='bold', strike_through=strike_thr)
-            write_style_str(parent_obj=c3, str_out=lst['auction_type'])
-            write_style_str(parent_obj=c3, str_out=f"{lst['from_ctry_str']}", color="#7D615E", font_size="1em")
+            # p = lst['price']
+            # p_str = f"{lst['price_str']}".replace('$',' ') if pd.isnull(p) else f"AU ${lst['price']}"
+            # write_style_str(parent_obj=c3, str_out=f"Sold  {lst['sold_date']:%d %b %Y}", color="#7D615E", font_size="1em")
+            # write_style_str(parent_obj=c3, str_out=lst['title'], color="#000000", font_size="1em", hyperlink=lst['sold_url'])
+            # strike_thr = True if lst['auction_type']=='Best Offer' else False
+            # write_style_str(parent_obj=c3, str_out=p_str, color="#7D615E", font_size="1.5em", font_w='bold', strike_through=strike_thr)
+            # write_style_str(parent_obj=c3, str_out=lst['auction_type'])
+            # write_style_str(parent_obj=c3, str_out=f"{lst['from_ctry_str']}", color="#7D615E", font_size="1em")
 
             # delete some keys
             delattr(st.session_state, f"{itm_id}_{ix}_c1")
@@ -247,7 +247,7 @@ def set_tsearch():
         # update containers above
         if st.session_state['sb']['show_pchart']:
             _update_price_chart()
-        _update_stats_board()
+        #_update_stats_board()
 
 
 
