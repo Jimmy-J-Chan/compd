@@ -149,7 +149,7 @@ def set_tsearch():
         _set_stats_board() # add container to show price stats
 
         # display parameters
-        c2_img_size = 200
+        c2_img_size = 140
 
         # display data
         #dfls = dfls.head(5)
