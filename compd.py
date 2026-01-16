@@ -4,7 +4,7 @@ import altair as alt
 
 from conf.config import ss_g, hist2days, loc_map
 from src.manage_screen_res import set_screen_data, set_screen_contr
-from src.common import set_scroll2top_button, set_chrome_driver, write_style_str
+from src.common import set_scroll2top_button, set_chrome_driver, write_style_str, reduce_md_spacing
 from src.get_ebayau_listing_data import get_ebayau_listing_data, get_lst_imgs
 
 # page settings
@@ -259,6 +259,7 @@ if __name__ == '__main__':
 
     # app contents
     with st.session_state.screen_contr:
+        reduce_md_spacing('0.05em')
         set_scroll2top_button()
         set_chrome_driver()
         set_session_state_groups()

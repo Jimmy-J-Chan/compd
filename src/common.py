@@ -75,3 +75,13 @@ def write_style_str(parent_obj=None, str_out=None, color=None, font_size=None, f
     else:
         st.markdown(html_str, unsafe_allow_html=True)
     pass
+
+def reduce_md_spacing(gap='0px'):
+    st.markdown(f"""
+        <style>
+        /* Reduce gap between ALL markdown blocks */
+        [data-testid="stMarkdownContainer"] p {{
+            margin-bottom: {gap} !important;
+        }}
+        </style>
+        """, unsafe_allow_html=True)
