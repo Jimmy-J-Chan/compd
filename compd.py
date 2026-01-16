@@ -204,11 +204,11 @@ def set_tsearch():
         _set_stats_board() # add container to show price stats
 
         # display parameters - mobile
-        c1_colw = [0.1,0.45, 0.45]
+        c1_colw = [0.05,0.5, 0.45]
         c2_img_size = 200
 
         # display data
-        dfls = dfls.head(10)
+        dfls = dfls.head(3)
         for ix, lst in dfls.iterrows():
             # container
             contr = st.container(border=True)
@@ -216,21 +216,25 @@ def set_tsearch():
                                        gap='small',
                                        vertical_alignment='center') # select, image, details
 
-            # select button
-            c1_key = f"{itm_id}_{ix}_c1"
-            _button_state = c1.checkbox(label='',
-                                        label_visibility='collapsed',
-                                        key=c1_key,
-                                        value=lst['include_lst'])
-            st.session_state['itms'][itm_id]['dfls'].loc[ix, 'include_lst'] = _button_state
+            c1.write('c1')
+            c2.write('c2')
+            c3.write('c3')
 
-            # show img0
-            c2_key = f"{itm_id}_{ix}_c2"
-            c2.image(f"{lst['img_url0']}/s-l{c2_img_size}.webp", width='content')
-            if c2.button('show more images', key=c2_key, width='content'):
-                show_more_listing_imgs(lst['sold_url'])
-
-            # details
+            # # select button
+            # c1_key = f"{itm_id}_{ix}_c1"
+            # _button_state = c1.checkbox(label='',
+            #                             label_visibility='collapsed',
+            #                             key=c1_key,
+            #                             value=lst['include_lst'])
+            # st.session_state['itms'][itm_id]['dfls'].loc[ix, 'include_lst'] = _button_state
+            #
+            # # show img0
+            # c2_key = f"{itm_id}_{ix}_c2"
+            # c2.image(f"{lst['img_url0']}/s-l{c2_img_size}.webp", width='content')
+            # if c2.button('show more images', key=c2_key, width='content'):
+            #     show_more_listing_imgs(lst['sold_url'])
+            #
+            # # details
             # p = lst['price']
             # p_str = f"{lst['price_str']}".replace('$',' ') if pd.isnull(p) else f"AU ${lst['price']}"
             # write_style_str(parent_obj=c3, str_out=f"Sold  {lst['sold_date']:%d %b %Y}", color="#7D615E", font_size="1em")
@@ -239,10 +243,10 @@ def set_tsearch():
             # write_style_str(parent_obj=c3, str_out=p_str, color="#7D615E", font_size="1.5em", font_w='bold', strike_through=strike_thr)
             # write_style_str(parent_obj=c3, str_out=lst['auction_type'])
             # write_style_str(parent_obj=c3, str_out=f"{lst['from_ctry_str']}", color="#7D615E", font_size="1em")
-
-            # delete some keys
-            delattr(st.session_state, f"{itm_id}_{ix}_c1")
-            delattr(st.session_state, c2_key)
+            #
+            # # delete some keys
+            # delattr(st.session_state, f"{itm_id}_{ix}_c1")
+            # delattr(st.session_state, c2_key)
 
         # update containers above
         if st.session_state['sb']['show_pchart']:
