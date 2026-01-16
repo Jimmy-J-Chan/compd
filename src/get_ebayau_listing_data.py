@@ -1,34 +1,13 @@
 import pandas as pd
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 import time
 import streamlit as st
 import urllib.parse
-from webdriver_manager.core.os_manager import ChromeType
 
 
-def get_chrome_driver(headless=True):
-    # Set up Chrome options
-    chrome_options = Options()
-    if headless:
-        chrome_options.add_argument("--headless")  # Uncomment to run without a visible window
-    #chrome_options.add_argument("--disable-blink-features=AutomationControlled")
-    #chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-    chrome_options.add_argument("window-size=1280,800")
-    chrome_options.add_argument("--disable-gpu")
-
-    if st.context.url in ['http://localhost:8501']:
-        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()),options=chrome_options)
-    else:
-        driver = webdriver.Chrome(service=Service(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()),
-                                  options=chrome_options)
-    return driver
 
 def close_chrome_driver(driver):
     driver.quit()
