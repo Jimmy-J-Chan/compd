@@ -204,7 +204,7 @@ def set_tsearch():
         _set_stats_board() # add container to show price stats
 
         # display parameters - mobile
-        c1_colw = [0.05,0.5, 0.45]
+        c1_colw = [0.1,0.45, 0.45]
         c2_img_size = 200
 
         # display data
