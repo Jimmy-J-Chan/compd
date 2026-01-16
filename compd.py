@@ -9,7 +9,7 @@ from src.get_ebayau_listing_data import get_ebayau_listing_data, get_lst_imgs
 
 # page settings
 st.set_page_config(page_title="Compd",
-                   layout="wide",
+                   layout="centered",
                    initial_sidebar_state='expanded',
                    page_icon='./logo/compd_logo_white.png',
                    )
@@ -211,7 +211,7 @@ def set_tsearch():
         dfls = dfls.head(3)
         for ix, lst in dfls.iterrows():
             # container
-            contr = st.container(border=True)
+            contr = st.container(border=True, horizontal=True)
             c1, c2, c3 = contr.columns(c1_colw,
                                        gap='small',
                                        vertical_alignment='center') # select, image, details
