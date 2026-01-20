@@ -408,6 +408,7 @@ def compd_mobile():
     set_tabs()
     set_tsearch()
     set_tport()
+    set_ttrade()
     pass
 
 
