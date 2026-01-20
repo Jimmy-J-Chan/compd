@@ -263,11 +263,15 @@ def set_tport():
         pf_name_map = {itm_id: st.session_state.pf['itms'][itm_id]['pf_name'] for itm_id in itm_ids}
         dfpf['pf_name'] = dfpf.index.map(pf_name_map)
 
-        cols = ['include_itm','include_trde', 'include_trde_you', 'include_trde_them']
+        cols = ['include_itm']#,'include_trde'] #, 'include_trde_you', 'include_trde_them']
         for col in cols:
-            dfpf[col] = False
+            dfpf[col] = True
         return dfpf
 
+    def save_btns_selected():
+        mask = st.session_state.pf['dfpf']['pf_name']==pf_name
+        st.session_state.pf['dfpf'].loc[mask, 'include_trde'] = st.session_state.pf['dfpf'].loc[mask,'include_itm'].copy()
+        pass
     ####################################################################################################################
 
     # include_itm, , num items, pcts - 90,80,75
@@ -320,7 +324,8 @@ def set_tport():
 
             # select button
             pf_c1_key = f"pf_{itm_id}_c1"
-            _button_state = contr_1.checkbox(label='', label_visibility='collapsed', key=pf_c1_key, value=True)
+            value = st.session_state.pf['dfpf'].loc[itm_id, 'include_itm']
+            _button_state = contr_1.checkbox(label='', label_visibility='collapsed', key=pf_c1_key, value=value)
             st.session_state.pf['dfpf'].loc[itm_id, 'include_itm'] = _button_state
 
             # use first image from dfls
@@ -358,16 +363,26 @@ def set_ttrade():
     def _set_trade_board():
         contr_trde = st.container(border=True)
         st.session_state.contr_trde = contr_trde
-        contr_trde.write('#### Trade')
+        contr_trde.write('#### Trade Analyser')
 
-    def _clear_selections():
-        slt_btns = [c for c in st.session_state.keys() if c.endswith('_slt_btn')]
-        st.write(slt_btns)
-        st.session_state[slt_btns] = False
+        # print balances
+        dfpf = st.session_state.pf['dfpf']
+        total_map = {}
+        for pfn in pf_names:
+            #contr_trde.write(f"{pfn}")
+            tmp_dfpf = dfpf.loc[dfpf['pf_name']==pfn]
+            total = (tmp_dfpf['price_input']*tmp_dfpf['include_itm']).sum()
+            contr_trde.write(f"Total ({pfn}): **${total:.2f}**")
+            total_map[pfn] = total
 
-    def _add2pf(pf_name='you'):
-        col_name = f"include_trde_{pf_name}"
-        st.session_state.pf['dfpf'][col_name] = st.session_state.pf['dfpf']['include_trde'].copy()
+        cash_bal = total_map['Me'] - total_map['You']
+        if cash_bal>1:
+            contr_trde.write(f"Balance: **They pay you ${cash_bal:.2f}**")
+        elif cash_bal<-1:
+            contr_trde.write(f"Balance: **You pay them ${-cash_bal:.2f}**")
+        elif (cash_bal<=1) & (cash_bal >= -1):
+            contr_trde.write(f"Balance: **Fair Trade**")
+
 
     ####################################################################################################################
     # so no error at the beginning
@@ -375,67 +390,11 @@ def set_ttrade():
     if 'dfpf' not in st.session_state.pf.keys():
         return
 
-    #st.write(st.session_state.pf['dfpf'])
-
-
+    pf_names = st.session_state['sb']['pf_names']
+    pf_name = st.session_state['sb']['pf_name']
     tb_p = st.session_state['tabs']['trade']
     with tb_p:
         _set_trade_board()
-
-        # set container to add you/them buttons
-        contr_trde_add2pf = st.container(horizontal=True, gap='small')
-
-        # display itms in pf
-        trde_c1_keys = []
-        dfpf = st.session_state.pf['dfpf']
-        for itm_id, row in dfpf.iterrows():
-            stats = st.session_state.pf['itms'][itm_id]['stats']
-            dfls = st.session_state.pf['itms'][itm_id]['dfls']
-
-            # container - write horizontally
-            contr = st.container(border=True)
-            contr_1 = contr.container(horizontal=True,
-                                      horizontal_alignment="left", vertical_alignment="center",
-                                      gap='small')
-
-            # select button
-            trde_c1_key = f"trde_{itm_id}_c1_slt_btn"
-            _button_state = contr_1.checkbox(label='', label_visibility='collapsed', key=trde_c1_key, value=False)
-            st.session_state.pf['dfpf'].loc[itm_id, 'include_trde'] = _button_state
-            trde_c1_keys.append(trde_c1_key)
-
-            # use first image from dfls
-            img_size = '140'
-            contr_1.image(f"{dfls['img_url0'].iloc[0]}/s-l{img_size}.webp")
-
-            # write vertically now
-            contr_2 = contr_1.container(horizontal=False,
-                                      horizontal_alignment="left", vertical_alignment="center",
-                                      gap="small")
-
-            sch_phrase = st.session_state['itms'][itm_id]['sch_phrase']
-            item_loc = st.session_state['itms'][itm_id]['item_loc']
-            contr_2.write(f"{sch_phrase}")
-            contr_2.write(f"${row['price_input']:.2f}")
-            contr_2.write(f"{item_loc}")
-
-            # compd itm info
-            trde_c3_key = f"trde_{itm_id}_c3"
-            if contr_2.button('Show Listings', key=trde_c3_key):
-                show_pf_itm_listing(itm_id)
-
-            # delete some keys
-            #delattr(st.session_state, trde_c1_key)
-            delattr(st.session_state, trde_c3_key)
-
-        # add buttons
-        if contr_trde_add2pf.button('Add to: **You**'):
-            _add2pf('you')
-        if contr_trde_add2pf.button('Add to: **Them**'):
-            _add2pf('them')
-
-        st.write(st.session_state.pf['dfpf'])
-
     pass
 
 

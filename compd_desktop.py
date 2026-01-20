@@ -37,7 +37,9 @@ def set_sidebar_elements():
     st.sidebar.markdown('<hr style="margin: 0px; border: 1px solid #ddd;">', unsafe_allow_html=True)
     st.sidebar.write('__Source__: Ebay - AU')
     st.sidebar.write('__Portfolio__:')
-    st.session_state['sb']['pf_name'] = st.sidebar.selectbox('', ['You','Them'], accept_new_options=False,
+    pf_names = ['Me','You']
+    st.session_state['sb']['pf_names'] = pf_names
+    st.session_state['sb']['pf_name'] = st.sidebar.selectbox('', pf_names, accept_new_options=False,
                                                              label_visibility='collapsed')
     st.sidebar.markdown('<hr style="margin: 0px; border: 1px solid #ddd;">', unsafe_allow_html=True)
     st.session_state['sb']['item_loc'] = st.sidebar.radio("Item Location",
@@ -47,9 +49,12 @@ def set_sidebar_elements():
                                                            '3 months','6 months'], index=2)
 
     st.sidebar.markdown('<hr style="margin: 0px; border: 1px solid #ddd;">', unsafe_allow_html=True)
-    st.session_state['sb']['rm_best_offer'] = st.sidebar.toggle("Remove Best Offers", value=True)
     st.session_state['sb']['show_sltd_lsts'] = st.sidebar.toggle("Selected Listings Only", value=False)
     st.session_state['sb']['show_pchart'] = st.sidebar.toggle("Show Price Chart", value=True)
+    st.session_state['sb']['rm_best_offer'] = st.sidebar.toggle("Remove Best Offers", value=True)
+    st.session_state['sb']['rm_graded'] = st.sidebar.toggle("Remove Graded Cards", value=True)
+    st.session_state['sb']['mtch_card_num'] = st.sidebar.toggle("Match Card Num", value=True)
+
 
     # calc some params
     st.session_state['sb']['history_len_days'] = hist2days[st.session_state['sb']['history_len']]
