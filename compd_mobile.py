@@ -24,6 +24,7 @@ def set_tsearch():
         st.session_state.contr_stats = contr_stats
         contr_stats.write('#### Selected listings:')
 
+
     def _set_pchart_container():
         contr_pchart = st.container(border=True)
         st.session_state.contr_pchart = contr_pchart
@@ -251,6 +252,16 @@ def set_tport():
                 c22.write(f"{_str}: **${total*pct:.2f}**")
         pass
 
+    def _create_dfpf():
+        dfpf = [pd.Series(st.session_state.pf['itms'][itm_id]['stats']).to_frame(itm_id) for itm_id in itm_ids]
+        dfpf = pd.concat(dfpf, axis=1).T
+
+        cols = ['include_itm','include_trde', 'include_trde_you', 'include_trde_them']
+        for col in cols:
+            dfpf[col] = False
+        return dfpf
+
+
     ####################################################################################################################
 
     # include_itm, , num items, pcts - 90,80,75
@@ -264,10 +275,22 @@ def set_tport():
         return
 
     # dfpf - itm_id, mean, median,
-    dfpf = [pd.Series(st.session_state.pf['itms'][itm_id]['stats']).to_frame(itm_id) for itm_id in itm_ids]
-    dfpf = pd.concat(dfpf, axis=1).T
-    dfpf['include_itm'] = False
-    st.session_state.pf['dfpf'] = dfpf
+    if 'dfpf' not in st.session_state.pf.keys():
+        #st.write('no dfpf detected')
+        dfpf = _create_dfpf()
+        st.session_state.pf['dfpf'] = dfpf
+    else:
+        dfpf_c = st.session_state.pf['dfpf']
+        dfpf_c_idx = dfpf_c.index
+        itm_name_diff = [c for c in itm_ids if c not in dfpf_c_idx]
+        p_diff = [c for c in dfpf_c_idx if (dfpf_c.loc[c,'price_input']!=st.session_state.pf['itms'][c]['stats']['price_input'])]
+        if (len(itm_name_diff)>0) | (len(p_diff)>0):
+            #st.write('dfpf exist - diff detected')
+            dfpf = _create_dfpf()
+            st.session_state.pf['dfpf'] = dfpf
+        else:
+            #st.write('no diff detected')
+            dfpf = st.session_state.pf['dfpf']
 
     tb_p = st.session_state['tabs']['portfolio']
     with tb_p:
@@ -318,11 +341,91 @@ def set_tport():
     pass
 
 def set_ttrade():
+    # area to split comps into two pf: you, them
+    # gives you the cash/trade value difference after pct
 
-    with st.session_state['tabs']['trade']:
-        contr_you = st.container(horizontal=True,)
+    def _set_trade_board():
+        contr_trde = st.container(border=True)
+        st.session_state.contr_trde = contr_trde
+        contr_trde.write('#### Trade')
+
+    def _clear_selections():
+        slt_btns = [c for c in st.session_state.keys() if c.endswith('_slt_btn')]
+        st.write(slt_btns)
+        st.session_state[slt_btns] = False
+
+    def _add2pf(pf_name='you'):
+        col_name = f"include_trde_{pf_name}"
+        st.session_state.pf['dfpf'][col_name] = st.session_state.pf['dfpf']['include_trde'].copy()
+
+    ####################################################################################################################
+    # so no error at the beginning
+    # this should autocalc without clicking on the pf tab
+    if 'dfpf' not in st.session_state.pf.keys():
+        return
+
+    #st.write(st.session_state.pf['dfpf'])
 
 
+    tb_p = st.session_state['tabs']['trade']
+    with tb_p:
+        _set_trade_board()
+
+        # set container to add you/them buttons
+        contr_trde_add2pf = st.container(horizontal=True, gap='small')
+
+        # display itms in pf
+        trde_c1_keys = []
+        dfpf = st.session_state.pf['dfpf']
+        for itm_id, row in dfpf.iterrows():
+            stats = st.session_state.pf['itms'][itm_id]['stats']
+            dfls = st.session_state.pf['itms'][itm_id]['dfls']
+
+            # container - write horizontally
+            contr = st.container(border=True)
+            contr_1 = contr.container(horizontal=True,
+                                      horizontal_alignment="left", vertical_alignment="center",
+                                      gap='small')
+
+            # select button
+            trde_c1_key = f"trde_{itm_id}_c1_slt_btn"
+            _button_state = contr_1.checkbox(label='', label_visibility='collapsed', key=trde_c1_key, value=False)
+            st.session_state.pf['dfpf'].loc[itm_id, 'include_trde'] = _button_state
+            trde_c1_keys.append(trde_c1_key)
+
+            # use first image from dfls
+            img_size = '140'
+            contr_1.image(f"{dfls['img_url0'].iloc[0]}/s-l{img_size}.webp")
+
+            # write vertically now
+            contr_2 = contr_1.container(horizontal=False,
+                                      horizontal_alignment="left", vertical_alignment="center",
+                                      gap="small")
+
+            sch_phrase = st.session_state['itms'][itm_id]['sch_phrase']
+            item_loc = st.session_state['itms'][itm_id]['item_loc']
+            contr_2.write(f"{sch_phrase}")
+            contr_2.write(f"${row['price_input']:.2f}")
+            contr_2.write(f"{item_loc}")
+
+            # compd itm info
+            trde_c3_key = f"trde_{itm_id}_c3"
+            if contr_2.button('Show Listings', key=trde_c3_key):
+                show_pf_itm_listing(itm_id)
+
+            # delete some keys
+            #delattr(st.session_state, trde_c1_key)
+            delattr(st.session_state, trde_c3_key)
+
+        # add buttons
+        if contr_trde_add2pf.button('Add to: **You**'):
+            _add2pf('you')
+        if contr_trde_add2pf.button('Add to: **Them**'):
+            _add2pf('them')
+
+        st.write(st.session_state.pf['dfpf'])
+
+    pass
 
 
 
