@@ -58,15 +58,16 @@ def set_tsearch():
             contr_stats.write(stats['median_str'])
 
             # add price
-            _c1, _c2, _c3 = contr_stats.columns([0.1,0.15,0.65], gap=None, vertical_alignment="center")
-            write_style_str(parent_obj=_c1, str_out='Price: ')
-            price_input = _c2.number_input('', min_value=0., value=stats['mean'],
-                                           label_visibility='collapsed', width=150)
+            # _c1, _c2, _c3 = contr_stats.columns([0.1,0.15,0.65], gap=None, vertical_alignment="center")
+            # write_style_str(parent_obj=_c1, str_out='Price: ')
+            # price_input = _c2.number_input('', min_value=0., value=stats['mean'],
+            #                                label_visibility='collapsed', width=150)
 
-            # contr_stats_p = contr_stats.container(horizontal=True, gap=None)
-            # write_style_str(parent_obj=contr_stats_p, str_out='Price: ')
-            # price_input = contr_stats_p.number_input('', min_value=0., value=stats['mean'],
-            #                                          label_visibility='collapsed', width=100)
+            contr_stats_p = contr_stats.container(horizontal=True, gap='small', width='content',
+                                                  vertical_alignment="top")
+            write_style_str(parent_obj=contr_stats_p, str_out='Price: ')
+            price_input = contr_stats_p.number_input('', min_value=0., value=stats['mean'],
+                                                     label_visibility='collapsed', width=100)
             stats['price'] = price_input
 
             # save to pf button
