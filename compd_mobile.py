@@ -64,10 +64,13 @@ def set_tsearch():
             price_input = contr_stats_p.text_input(label='', label_visibility='collapsed',
                                                    placeholder=f"{stats['mean']:.2f}",
                                                    key="price_input", width=100)
-            st.write(st.session_state.price_input)
+            # set default value
+            if len(price_input)==0:
+                price_input = stats['mean']
+
             try:
                 price_input = float(price_input)
-                stats['price'] = price_input
+                stats['price_input'] = price_input
 
                 # save to pf button
                 if contr_stats.button('Add to Portfolio'):
@@ -234,7 +237,7 @@ def set_tport():
         dfpf = st.session_state.pf['dfpf']
         if dfpf['include_itm'].sum()>0:
             contr_pf = st.session_state.contr_pf
-            total = (dfpf[agg_by]*dfpf['include_itm']).sum()
+            total = (dfpf['price_input']*dfpf['include_itm']).sum()
             contr_pf.write(f"Total: **${total:.2f}**")
 
             c11 = contr_pf.container(horizontal=True)
@@ -252,14 +255,12 @@ def set_tport():
 
     # include_itm, , num items, pcts - 90,80,75
     # display portfolio - use most recent lst as photo
-    agg_by = 'mean'
+    #agg_by = 'mean'
     pcts_c1 = [0.9, 0.80, 0.70]
     pcts_c2 = [0.85, 0.75, 0.6]
 
     # so no error at the beginning
     itm_ids = st.session_state.pf['itms'].keys()
-    # st.write(itm_ids)
-    # st.write(st.session_state.pf)
     if len(itm_ids)==0:
         return
 
@@ -301,7 +302,7 @@ def set_tport():
             sch_phrase = st.session_state['itms'][itm_id]['sch_phrase']
             item_loc = st.session_state['itms'][itm_id]['item_loc']
             contr_2.write(f"{sch_phrase}")
-            contr_2.write(f"${row[agg_by]:.2f}")
+            contr_2.write(f"${row['price_input']:.2f}")
             contr_2.write(f"{item_loc}")
 
             # compd itm info
