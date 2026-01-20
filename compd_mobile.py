@@ -76,6 +76,7 @@ def set_tsearch():
                     st.session_state.pf['itms'][itm_id]['dfls'] = _dfls
                     st.session_state.pf['itms'][itm_id]['stats'] = stats
                     st.toast(f"Saved to Portfolio", icon="✔️")
+
             except ValueError:
                 write_style_str(parent_obj=contr_stats_p, str_out='Enter valid price!',
                                 color='red', font_w='bold')
