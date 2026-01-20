@@ -210,14 +210,14 @@ def set_tsearch():
             write_style_str(parent_obj=contr_2, str_out=lst['auction_type'])
             write_style_str(parent_obj=contr_2, str_out=f"{lst['from_ctry_str']}", color="#7D615E", font_size="1em")
 
-            # show more imgs
-            c2_key = f"{itm_id}_{ix}_c2"
-            if contr_2.button('show more images', key=c2_key, width='content'):
-                show_more_listing_imgs(lst['sold_url'])
+            # # show more imgs
+            # c2_key = f"{itm_id}_{ix}_c2"
+            # if contr_2.button('show more images', key=c2_key, width='content'):
+            #     show_more_listing_imgs(lst['sold_url'])
 
             # delete some keys
             delattr(st.session_state, c1_key)
-            delattr(st.session_state, c2_key)
+            #delattr(st.session_state, c2_key)
 
         # update containers above
         if st.session_state['sb']['show_pchart']:
