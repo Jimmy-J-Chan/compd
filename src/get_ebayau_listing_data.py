@@ -82,7 +82,7 @@ def parse_lsts(lsts):
     # keep best matches at top?
     return dfls
 
-@st.cache_data
+@st.cache_data(ttl='1hr',max_entries=15,show_spinner=False)
 def get_lst_imgs(url, _driver):
     # go to sold listing url
     driver = _driver
@@ -105,7 +105,7 @@ def get_lst_imgs(url, _driver):
         img_urls = []
     return img_urls
 
-@st.cache_data
+@st.cache_data(ttl='1hr',max_entries=15,show_spinner=True)
 def get_ebayau_listing_data(sch_phrase, item_loc, ipg, _driver):
     if len(sch_phrase)==0:
         return pd.DataFrame()
