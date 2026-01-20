@@ -62,7 +62,7 @@ def set_tsearch():
                                                   vertical_alignment="top")
             write_style_str(parent_obj=contr_stats_p, str_out='Price: ')
             price_input = contr_stats_p.number_input('', min_value=0., value=stats['mean'],
-                                                     label_visibility='collapsed', width=100)
+                                                     label_visibility='collapsed')#, width='content')
             stats['price'] = price_input
 
             # save to pf button
