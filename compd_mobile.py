@@ -74,12 +74,14 @@ def set_tsearch():
                 stats['price_input'] = price_input
 
                 # save to pf button
-                if contr_stats.button('Add to Portfolio'):
+                pf_name = st.session_state['sb']['pf_name']
+                if contr_stats.button(f'Add to Portfolio'):
                     if itm_id not in st.session_state.pf['itms'].keys():
                         st.session_state.pf['itms'][itm_id] = {}
                     st.session_state.pf['itms'][itm_id]['dfls'] = _dfls
                     st.session_state.pf['itms'][itm_id]['stats'] = stats
-                    st.toast(f"Saved to Portfolio", icon="✔️")
+                    st.session_state.pf['itms'][itm_id]['pf_name'] = pf_name
+                    st.toast(f"Saved to Portfolio: {pf_name}", icon="✔️")
 
             except ValueError:
                 write_style_str(parent_obj=contr_stats_p, str_out='Enter valid price!',
@@ -232,10 +234,11 @@ def set_tport():
     def _set_portfolio_board():
         contr_pf = st.container(border=True)
         st.session_state.contr_pf = contr_pf
-        contr_pf.write('#### Portfolio')
+        contr_pf.write(f"#### Portfolio: {st.session_state['sb']['pf_name']}")
 
     def _update_portfolio_board():
         dfpf = st.session_state.pf['dfpf']
+        dfpf = dfpf.loc[dfpf['pf_name']==pf_name]
         if dfpf['include_itm'].sum()>0:
             contr_pf = st.session_state.contr_pf
             total = (dfpf['price_input']*dfpf['include_itm']).sum()
@@ -256,11 +259,14 @@ def set_tport():
         dfpf = [pd.Series(st.session_state.pf['itms'][itm_id]['stats']).to_frame(itm_id) for itm_id in itm_ids]
         dfpf = pd.concat(dfpf, axis=1).T
 
+        # add corresponding pf_name
+        pf_name_map = {itm_id: st.session_state.pf['itms'][itm_id]['pf_name'] for itm_id in itm_ids}
+        dfpf['pf_name'] = dfpf.index.map(pf_name_map)
+
         cols = ['include_itm','include_trde', 'include_trde_you', 'include_trde_them']
         for col in cols:
             dfpf[col] = False
         return dfpf
-
 
     ####################################################################################################################
 
@@ -292,9 +298,14 @@ def set_tport():
             #st.write('no diff detected')
             dfpf = st.session_state.pf['dfpf']
 
+
     tb_p = st.session_state['tabs']['portfolio']
     with tb_p:
         _set_portfolio_board()
+
+        # filter by portfolio name
+        pf_name = st.session_state['sb']['pf_name']
+        dfpf = dfpf.loc[dfpf['pf_name']==pf_name]
 
         # display itms in pf
         for itm_id, row in dfpf.iterrows():

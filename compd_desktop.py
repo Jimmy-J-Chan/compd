@@ -36,11 +36,15 @@ def set_sidebar_elements():
         reset_session_state_params_data()
     st.sidebar.markdown('<hr style="margin: 0px; border: 1px solid #ddd;">', unsafe_allow_html=True)
     st.sidebar.write('__Source__: Ebay - AU')
+    st.sidebar.write('__Portfolio__:')
+    st.session_state['sb']['pf_name'] = st.sidebar.selectbox('', ['You','Them'], accept_new_options=False,
+                                                             label_visibility='collapsed')
+    st.sidebar.markdown('<hr style="margin: 0px; border: 1px solid #ddd;">', unsafe_allow_html=True)
     st.session_state['sb']['item_loc'] = st.sidebar.radio("Item Location",
                                                         ['Australia only', 'Worldwide'], index=0)
     st.session_state['sb']['history_len'] = st.sidebar.radio("History",
                                                           ['1 week', '2 weeks','3 weeks','4 weeks',
-                                                           '3 months','6 months','12 months'], index=2)
+                                                           '3 months','6 months'], index=2)
 
     st.sidebar.markdown('<hr style="margin: 0px; border: 1px solid #ddd;">', unsafe_allow_html=True)
     st.session_state['sb']['rm_best_offer'] = st.sidebar.toggle("Remove Best Offers", value=True)
