@@ -63,18 +63,24 @@ def set_tsearch():
             write_style_str(parent_obj=contr_stats_p, str_out='Price: ')
             price_input = contr_stats_p.text_input(label='', label_visibility='collapsed',
                                                    placeholder=f"{stats['mean']:.2f}",
-                                                   key="_price_input", width=100)
-            # price_input = contr_stats_p.number_input('', min_value=0., value=stats['mean'],
-            #                                          label_visibility='collapsed', width=60)
-            stats['price'] = price_input
+                                                   key="price_input", width=100)
+            st.write(st.session_state.price_input)
+            try:
+                price_input = float(price_input)
+                stats['price'] = price_input
 
-            # save to pf button
-            if contr_stats.button('Add to Portfolio'):
-                if itm_id not in st.session_state.pf['itms'].keys():
-                    st.session_state.pf['itms'][itm_id] = {}
-                st.session_state.pf['itms'][itm_id]['dfls'] = _dfls
-                st.session_state.pf['itms'][itm_id]['stats'] = stats
-                st.toast(f"Saved to Portfolio", icon="✔️")
+                # save to pf button
+                if contr_stats.button('Add to Portfolio'):
+                    if itm_id not in st.session_state.pf['itms'].keys():
+                        st.session_state.pf['itms'][itm_id] = {}
+                    st.session_state.pf['itms'][itm_id]['dfls'] = _dfls
+                    st.session_state.pf['itms'][itm_id]['stats'] = stats
+                    st.toast(f"Saved to Portfolio", icon="✔️")
+            except ValueError:
+                write_style_str(parent_obj=contr_stats_p, str_out='Enter valid price!',
+                                color='red', font_w='bold')
+
+
 
     def _update_price_chart():
         # df: selected listings, match history param
