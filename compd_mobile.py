@@ -255,7 +255,6 @@ def set_tport():
 
     # include_itm, , num items, pcts - 90,80,75
     # display portfolio - use most recent lst as photo
-    #agg_by = 'mean'
     pcts_c1 = [0.9, 0.80, 0.70]
     pcts_c2 = [0.85, 0.75, 0.6]
 
