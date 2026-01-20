@@ -40,12 +40,12 @@ def set_sidebar_elements():
                                                         ['Australia only', 'Worldwide'], index=0)
     st.session_state['sb']['history_len'] = st.sidebar.radio("History",
                                                           ['1 week', '2 weeks','3 weeks','4 weeks',
-                                                           '3 months','6months','12months'], index=1)
+                                                           '3 months','6 months','12 months'], index=2)
 
     st.sidebar.markdown('<hr style="margin: 0px; border: 1px solid #ddd;">', unsafe_allow_html=True)
-    st.session_state['sb']['rm_best_offer'] = st.sidebar.toggle("Remove Best Offers", value=False)
+    st.session_state['sb']['rm_best_offer'] = st.sidebar.toggle("Remove Best Offers", value=True)
     st.session_state['sb']['show_sltd_lsts'] = st.sidebar.toggle("Selected Listings Only", value=False)
-    st.session_state['sb']['show_pchart'] = st.sidebar.toggle("Show Price Chart", value=False)
+    st.session_state['sb']['show_pchart'] = st.sidebar.toggle("Show Price Chart", value=True)
 
     # calc some params
     st.session_state['sb']['history_len_days'] = hist2days[st.session_state['sb']['history_len']]

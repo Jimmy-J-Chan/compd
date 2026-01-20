@@ -22,7 +22,7 @@ def set_tsearch():
     def _set_stats_board():
         contr_stats = st.container(border=True)
         st.session_state.contr_stats = contr_stats
-        contr_stats.write('#### Selected listings')
+        contr_stats.write('#### Selected listings:')
 
     def _set_pchart_container():
         contr_pchart = st.container(border=True)
@@ -49,13 +49,28 @@ def set_tsearch():
                      'mean': _dfls['price'].mean(),
                      'median': _dfls['price'].median(),
                      }
+
             contr_stats = st.session_state.contr_stats
             contr_stats.write(stats['date_range_str'])
             contr_stats.write(stats['listings_str'])
             contr_stats.write(stats['price_range_str'])
             contr_stats.write(stats['mean_str'])
             contr_stats.write(stats['median_str'])
-            if contr_stats.button('Add to Portfolio'):#, key=f"{itm_id}_{ix}_statb"):
+
+            # add price
+            _c1, _c2, _c3 = contr_stats.columns([0.1,0.15,0.65], gap=None, vertical_alignment="center")
+            write_style_str(parent_obj=_c1, str_out='Price: ')
+            price_input = _c2.number_input('', min_value=0., value=stats['mean'],
+                                           label_visibility='collapsed', width=150)
+
+            # contr_stats_p = contr_stats.container(horizontal=True, gap=None)
+            # write_style_str(parent_obj=contr_stats_p, str_out='Price: ')
+            # price_input = contr_stats_p.number_input('', min_value=0., value=stats['mean'],
+            #                                          label_visibility='collapsed', width=100)
+            stats['price'] = price_input
+
+            # save to pf button
+            if contr_stats.button('Add to Portfolio'):
                 if itm_id not in st.session_state.pf['itms'].keys():
                     st.session_state.pf['itms'][itm_id] = {}
                 st.session_state.pf['itms'][itm_id]['dfls'] = _dfls
@@ -227,6 +242,8 @@ def set_tport():
                 c22.write(f"{_str}: **${total*pct:.2f}**")
         pass
 
+    ####################################################################################################################
+
     # include_itm, , num items, pcts - 90,80,75
     # display portfolio - use most recent lst as photo
     agg_by = 'mean'
@@ -294,6 +311,10 @@ def set_tport():
         _update_portfolio_board()
     pass
 
+def set_ttrade():
+
+    with st.session_state['tabs']['trade']:
+        contr_you = st.container(horizontal=True,)
 
 
 
@@ -301,7 +322,6 @@ def set_tport():
 
 def compd_mobile():
     #st.write('compd - mobile')
-
     set_scroll2top_button()
     set_chrome_driver()
     set_session_state_groups()
@@ -320,3 +340,4 @@ if __name__ == '__main__':
     set_tabs()
     set_tsearch()
     set_tport()
+    set_ttrade()
