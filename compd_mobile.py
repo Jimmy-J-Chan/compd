@@ -63,7 +63,7 @@ def set_tsearch():
             write_style_str(parent_obj=contr_stats_p, str_out='Price: ')
             price_input = contr_stats_p.text_input(label='', label_visibility='collapsed',
                                                    placeholder=f"{stats['mean']:.2f}",
-                                                   key="_price_input", width=100)
+                                                   key="_price_input")#, width=100)
             # price_input = contr_stats_p.number_input('', min_value=0., value=stats['mean'],
             #                                          label_visibility='collapsed', width=60)
             stats['price'] = price_input
