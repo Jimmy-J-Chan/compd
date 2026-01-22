@@ -32,7 +32,7 @@ def set_scroll2top_button():
         unsafe_allow_html=True
     )
 
-def get_chrome_driver(headless=True):
+def get_chrome_driver(headless=True, use_local=False):
     # Set up Chrome options
     chrome_options = Options()
     if headless:
@@ -42,7 +42,7 @@ def get_chrome_driver(headless=True):
     chrome_options.add_argument("window-size=1280,800")
     chrome_options.add_argument("--disable-gpu")
 
-    if st.context.url in ['http://localhost:8501']:
+    if (st.context.url in ['http://localhost:8501']) | use_local:
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()),options=chrome_options)
     else:
         driver = webdriver.Chrome(service=Service(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()),
@@ -90,3 +90,10 @@ def reduce_md_spacing(gap='0px'):
 def insert_spacer():
     st.markdown('<hr style="margin: 0px; border: 1px solid #ddd;">', unsafe_allow_html=True)
     pass
+
+def is_float(value):
+    try:
+        float(value)
+        return True
+    except ValueError:
+        return False

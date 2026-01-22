@@ -3,7 +3,6 @@ import pandas as pd
 import altair as alt
 
 from conf.config import ss_g, hist2days, loc_map
-from src.manage_screen_res import set_screen_data, set_screen_contr
 from src.common import set_scroll2top_button, set_chrome_driver, write_style_str, reduce_md_spacing, insert_spacer
 from src.get_ebayau_listing_data import get_ebayau_listing_data, get_lst_imgs
 
@@ -30,10 +29,19 @@ def reset_session_state_params_data():
         if g == 'pf':
             st.session_state.pf['itms'] = {}
 
+def deselect_lstings():
+    if ('itm_id_in' in st.session_state.keys()) & ('deselect_btn' in st.session_state.keys()):
+        if st.session_state.deselect_btn:
+            itm_id = st.session_state['itm_id_in']
+            st.session_state['itms'][itm_id]['dfls']['include_lst'] = False
+            st.rerun()
+    pass
+
 def set_sidebar_elements():
     st.sidebar.image('./logo/compd_logo_white.png',)
     if st.sidebar.button('Clear Data'):
         reset_session_state_params_data()
+    #st.sidebar.button('Deselect All Listings', on_click=deselect_lstings(), key='deselect_btn')
     st.sidebar.markdown('<hr style="margin: 0px; border: 1px solid #ddd;">', unsafe_allow_html=True)
     st.sidebar.write('__Source__: Ebay - AU')
     st.sidebar.write('__Portfolio__:')
@@ -46,15 +54,15 @@ def set_sidebar_elements():
                                                         ['Australia only', 'Worldwide'], index=0)
     st.session_state['sb']['history_len'] = st.sidebar.radio("History",
                                                           ['1 week', '2 weeks','3 weeks','4 weeks',
-                                                           '3 months','6 months'], index=2)
+                                                           '3 months','6 months'], index=1)
 
     st.sidebar.markdown('<hr style="margin: 0px; border: 1px solid #ddd;">', unsafe_allow_html=True)
     st.session_state['sb']['show_sltd_lsts'] = st.sidebar.toggle("Selected Listings Only", value=False)
+    st.session_state['sb']['deselect_lsts'] = st.sidebar.toggle("Deselect Listings", value=False)
     st.session_state['sb']['show_pchart'] = st.sidebar.toggle("Show Price Chart", value=True)
     st.session_state['sb']['rm_best_offer'] = st.sidebar.toggle("Remove Best Offers", value=True)
     st.session_state['sb']['rm_graded'] = st.sidebar.toggle("Remove Graded Cards", value=True)
     st.session_state['sb']['mtch_card_num'] = st.sidebar.toggle("Match Card Num", value=True)
-
 
     # calc some params
     st.session_state['sb']['history_len_days'] = hist2days[st.session_state['sb']['history_len']]

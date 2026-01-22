@@ -3,8 +3,8 @@ import pandas as pd
 import altair as alt
 
 from conf.config import ss_g, hist2days, loc_map
-from src.manage_screen_res import set_screen_data, set_screen_contr
-from src.common import set_scroll2top_button, set_chrome_driver, write_style_str, reduce_md_spacing, insert_spacer
+from src.common import (set_scroll2top_button, set_chrome_driver, write_style_str, reduce_md_spacing, insert_spacer,
+                        is_float)
 from src.get_ebayau_listing_data import get_ebayau_listing_data, get_lst_imgs
 
 from compd_desktop import (set_session_state_groups, set_sidebar_elements, set_tabs,
@@ -24,7 +24,6 @@ def set_tsearch():
         st.session_state.contr_stats = contr_stats
         contr_stats.write('#### Selected listings:')
 
-
     def _set_pchart_container():
         contr_pchart = st.container(border=True)
         st.session_state.contr_pchart = contr_pchart
@@ -32,8 +31,7 @@ def set_tsearch():
     def _update_stats_board():
         # df: selected listings, match history param
         _dfls = st.session_state['itms'][itm_id]['dfls']
-        _dfls = _dfls.loc[_dfls['include_lst']]
-        _dfls = _dfls.loc[_dfls['sold_date'] >= st.session_state['sb']['hist_sdate']]
+        _dfls = _dfls.loc[_dfls['include_lst'] & _dfls['include_lst_filters']]
         num_lsts = len(_dfls)
         if num_lsts > 0:
             stats = {'date_range_str': f"Date range: **{_dfls['sold_date'].min():%d %b %Y} - {_dfls['sold_date'].max():%d %b %Y}**",
@@ -87,13 +85,10 @@ def set_tsearch():
                 write_style_str(parent_obj=contr_stats_p, str_out='Enter valid price!',
                                 color='red', font_w='bold')
 
-
-
     def _update_price_chart():
         # df: selected listings, match history param
         _dfls = st.session_state['itms'][itm_id]['dfls']
-        _dfls = _dfls.loc[_dfls['include_lst']]
-        _dfls = _dfls.loc[_dfls['sold_date'] >= st.session_state['sb']['hist_sdate']]
+        _dfls = _dfls.loc[_dfls['include_lst'] & _dfls['include_lst_filters']]
 
         contr_pchart = st.session_state.contr_pchart
         if len(_dfls)>1:
@@ -131,7 +126,9 @@ def set_tsearch():
         sch_phrase = st.text_input(label='',
                                    label_visibility='collapsed',
                                    placeholder='Enter card name and number',
-                                   key="sch_phrase_in")
+                                   )
+        sch_phrase = sch_phrase.strip()
+
         # manage search bar input
         if len(sch_phrase) == 0:
             # show nothing
@@ -143,18 +140,31 @@ def set_tsearch():
         # get listing data
         item_loc = st.session_state['sb']['item_loc']
         itm_id = f"{sch_phrase}_{loc_map[item_loc]}"
+
+        #save some keys
+        st.session_state['sch_phrase_in'] = sch_phrase
+        st.session_state['item_loc_in'] = item_loc
+        st.session_state['itm_id_in'] = itm_id
+
         if itm_id not in st.session_state['itms'].keys():
             st.session_state['itms'][itm_id] = {}
 
             ipg = st.session_state['sb']['ipg']
             driver = st.session_state.chrome_driver
             dfls = get_ebayau_listing_data(sch_phrase, item_loc, ipg, driver)
-            dfls['include_lst'] = False
+            #dfls['include_lst'] = True # set all listings to begin, need to manually exclude lsts
             st.session_state['itms'][itm_id]['dfls'] = dfls
             st.session_state['itms'][itm_id]['sch_phrase'] = sch_phrase
             st.session_state['itms'][itm_id]['item_loc'] = item_loc
+
+        # setup dfls - # remove lsts based on sidebar filtering options
+        if st.session_state['sb']['deselect_lsts']: # start with listings unselected
+            st.session_state['itms'][itm_id]['dfls']['include_lst'] = False
         else:
-            dfls = st.session_state['itms'][itm_id]['dfls']
+            st.session_state['itms'][itm_id]['dfls']['include_lst'] = True
+
+        st.session_state['itms'][itm_id]['dfls']['include_lst_filters'] = False
+        dfls = st.session_state['itms'][itm_id]['dfls']
 
         # if no data returned
         if len(dfls)==0:
@@ -162,13 +172,32 @@ def set_tsearch():
             return
 
         # prep the data to be displayed
-        dfls = dfls.loc[dfls['sold_date'] >= st.session_state['sb']['hist_sdate']] # trim to match history param
-        if st.session_state['sb']['rm_best_offer']: # remove best offers
-            dfls = dfls.loc[dfls['auction_type']!='Best Offer']
+        mask = dfls['sold_date'] >= st.session_state['sb']['hist_sdate']
+        if st.session_state['sb']['rm_best_offer']:  # remove best offers
+            mask = mask & (dfls['auction_type']!='Best Offer')
         if st.session_state['sb']['show_sltd_lsts']: # show selected listings only
-            dfls = dfls.loc[dfls['include_lst']]
-            if len(dfls)==0:
+            mask = mask & (dfls['include_lst'])
+            if mask.sum()==0:
                 return
+        if st.session_state['sb']['rm_graded']:
+            grading_companies = ['psa','cgc','bgs','beckett','ace','tag'] # 1,10, step=0.5
+            pattern = r'(psa|cgc|bgs|beckett|ace|tag|ark)\s?([1-9](\.5)?|10)\b'
+            mask = mask & (~dfls['title'].str.contains(pattern, na=False, case=False))
+        if st.session_state['sb']['mtch_card_num']:
+            # find card number loc
+            if is_float(sch_phrase[-1]): # card num at end
+                card_num = sch_phrase.rsplit(maxsplit=1)[1].strip()
+            elif is_float(sch_phrase[0]): # card num at beginning
+                card_num = sch_phrase.split(maxsplit=1)[0].strip()
+            else: # no card num provided
+                card_num = ''
+            card_num = card_num.split('/')[0].strip() if '/' in card_num else card_num
+            mask = mask & (dfls['title'].str.contains(f"{card_num}", na=False, case=False))
+        dfls['include_lst_filters'] = mask
+
+        # update filter mask
+        st.session_state['itms'][itm_id]['dfls']['include_lst_filters'] = dfls['include_lst_filters']
+        dfls = dfls.loc[mask] # lsts to display
 
         # set some data containers
         if st.session_state['sb']['show_pchart']: # price chart
@@ -226,6 +255,7 @@ def set_tsearch():
         if st.session_state['sb']['show_pchart']:
             _update_price_chart()
         _update_stats_board()
+        st.write(st.session_state['itms'][itm_id]['dfls'])
 
 
     pass
@@ -413,12 +443,5 @@ def compd_mobile():
 
 
 if __name__ == '__main__':
-    set_scroll2top_button()
-    set_chrome_driver()
-    set_session_state_groups()
-    set_sidebar_elements()
-    set_tabs()
-    set_tsearch()
-    set_tport()
-    set_ttrade()
+    compd_mobile()
     pass

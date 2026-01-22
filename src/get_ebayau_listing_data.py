@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 import time
 import streamlit as st
 import urllib.parse
-
+from src.common import get_chrome_driver
 
 
 def close_chrome_driver(driver):
@@ -150,12 +150,16 @@ def get_ebayau_listing_data(sch_phrase, item_loc, ipg, _driver):
 
 
 if __name__ == '__main__':
-    driver = get_chrome_driver(headless=False)
-    #sch_phrase = 'giratina v 186/196'
-    sch_phrase = 'mew ex 232'
+    driver = get_chrome_driver(headless=False, use_local=True)
+    sch_phrase = 'giratina v 186/196'
+    # sch_phrase = 'mew ex 232'
     item_loc = 'Australia only'
     ipg = 60
-    get_ebayau_listing_data(sch_phrase, item_loc, ipg, driver)
+    dfls = get_ebayau_listing_data(sch_phrase, item_loc, ipg, driver)
+
+    # regex
+    dfls['mask_grade'] = (dfls['title'].str.contains('', na=False, case=False))
+    dfls[['mask_grade','title']]
 
     # driver = get_chrome_driver(headless=False)
     # url = r'https://www.ebay.com.au/itm/187777556541?_skw=giratina+v+186%2F196&itmmeta=01KEEB37XCG43486XHR5GXVRHF&hash=item2bb86a203d:g:vG8AAeSwdVZpJjg1&itmprp=enc%3AAQAKAAAA8FkggFvd1GGDu0w3yXCmi1cGWJgSJWCKg7JEo77W2u9HcaUTer3y0L%2FdJDGnB197K8fDHhxzIIziwxB7z0g32qlCu4rEhN%2FzH7ad4ijZMQ%2F6PPh2tAqpHMxKZ4Ftgp%2FKh%2FR6ikYtMmR1%2FTE5w5MpSbtMNCbZqnGDFfO7Mj94cMqPlxgP0j7ordIyglZVHexwZVTvA5VL2DpFhMnuTDp14lJpOs9TblhGmyWPVGgqIA0jMhoLxjxInTX0wh24X1CXoZCqIJAS%2FBuyfXStD9tNI69m%2FCENHVGURERpouPsXW34NeRAeU1y0bzSgSXIwd6unQ%3D%3D%7Ctkp%3ABk9SR_T-jMvzZg'
