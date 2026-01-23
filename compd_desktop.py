@@ -38,12 +38,13 @@ def deselect_lstings():
     pass
 
 def set_sidebar_elements():
+    vers_num = '2026-01-23 1746'
     st.sidebar.image('./logo/compd_logo_white.png',)
     if st.sidebar.button('Clear Data'):
         reset_session_state_params_data()
     #st.sidebar.button('Deselect All Listings', on_click=deselect_lstings(), key='deselect_btn')
     st.sidebar.markdown('<hr style="margin: 0px; border: 1px solid #ddd;">', unsafe_allow_html=True)
-    st.sidebar.write(f'__Version__: {pd.Timestamp.today():%Y-%m-%d %H%M}')
+    st.sidebar.write(f'__Version__: {vers_num}')
     st.sidebar.write('__Source__: Ebay - AU')
     st.sidebar.write('__Portfolio__:')
     pf_names = ['Me','You']
