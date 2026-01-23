@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import altair as alt
+import re
 
 from conf.config import ss_g, hist2days, loc_map
 from src.common import (set_scroll2top_button, set_chrome_driver, write_style_str, reduce_md_spacing, insert_spacer,
@@ -126,6 +127,7 @@ def set_tsearch():
         sch_phrase = st.text_input(label='',
                                    label_visibility='collapsed',
                                    placeholder='Enter card name and number',
+                                   key='sch_phrase_in'
                                    )
         sch_phrase = sch_phrase.strip()
 
@@ -142,29 +144,28 @@ def set_tsearch():
         itm_id = f"{sch_phrase}_{loc_map[item_loc]}"
 
         #save some keys
-        st.session_state['sch_phrase_in'] = sch_phrase
-        st.session_state['item_loc_in'] = item_loc
-        st.session_state['itm_id_in'] = itm_id
+        # st.session_state['sch_phrase_in'] = sch_phrase
+        # st.session_state['item_loc_in'] = item_loc
+        # st.session_state['itm_id_in'] = itm_id
 
         if itm_id not in st.session_state['itms'].keys():
             st.session_state['itms'][itm_id] = {}
-
             ipg = st.session_state['sb']['ipg']
             driver = st.session_state.chrome_driver
             dfls = get_ebayau_listing_data(sch_phrase, item_loc, ipg, driver)
-            #dfls['include_lst'] = True # set all listings to begin, need to manually exclude lsts
-            st.session_state['itms'][itm_id]['dfls'] = dfls
+            dfls['include_lst'] = True # mask for btns
+            dfls['include_lst_filters'] = False # mask for sidebar filters
+            st.session_state['itms'][itm_id]['dfls'] = dfls.copy()
             st.session_state['itms'][itm_id]['sch_phrase'] = sch_phrase
             st.session_state['itms'][itm_id]['item_loc'] = item_loc
-
-        # setup dfls - # remove lsts based on sidebar filtering options
-        if st.session_state['sb']['deselect_lsts']: # start with listings unselected
-            st.session_state['itms'][itm_id]['dfls']['include_lst'] = False
         else:
-            st.session_state['itms'][itm_id]['dfls']['include_lst'] = True
-
-        st.session_state['itms'][itm_id]['dfls']['include_lst_filters'] = False
-        dfls = st.session_state['itms'][itm_id]['dfls']
+            # # setup dfls - # remove lsts based on sidebar filtering options
+            # if st.session_state['sb']['deselect_lsts']: # start with listings unselected
+            #     st.session_state['itms'][itm_id]['dfls']['include_lst'] = False
+            # else:
+            #     st.session_state['itms'][itm_id]['dfls']['include_lst'] = True
+            # st.session_state['itms'][itm_id]['dfls']['include_lst_filters'] = False
+            dfls = st.session_state['itms'][itm_id]['dfls'].copy()
 
         # if no data returned
         if len(dfls)==0:
@@ -172,32 +173,46 @@ def set_tsearch():
             return
 
         # prep the data to be displayed
+        pattern_graded = r'(psa|cgc|bgs|beckett|ace|tag|ark)\s?([1-9](\.5)?|10)\b'
         mask = dfls['sold_date'] >= st.session_state['sb']['hist_sdate']
         if st.session_state['sb']['rm_best_offer']:  # remove best offers
             mask = mask & (dfls['auction_type']!='Best Offer')
         if st.session_state['sb']['show_sltd_lsts']: # show selected listings only
             mask = mask & (dfls['include_lst'])
-            if mask.sum()==0:
-                return
-        if st.session_state['sb']['rm_graded']:
-            grading_companies = ['psa','cgc','bgs','beckett','ace','tag'] # 1,10, step=0.5
-            pattern = r'(psa|cgc|bgs|beckett|ace|tag|ark)\s?([1-9](\.5)?|10)\b'
-            mask = mask & (~dfls['title'].str.contains(pattern, na=False, case=False))
         if st.session_state['sb']['mtch_card_num']:
-            # find card number loc
-            if is_float(sch_phrase[-1]): # card num at end
-                card_num = sch_phrase.rsplit(maxsplit=1)[1].strip()
-            elif is_float(sch_phrase[0]): # card num at beginning
-                card_num = sch_phrase.split(maxsplit=1)[0].strip()
+            tmp_sch_phrase = sch_phrase
+            # identify if graded card search
+            re_search = re.search(pattern_graded, sch_phrase, re.IGNORECASE)
+            if bool(re_search):
+                pattern_found = re_search.group()
+                st.session_state['sb']['rm_graded'] = False
+                tmp_sch_phrase = tmp_sch_phrase.strip(pattern_found).strip()
+                # include only graded
+                mask = mask & (dfls['title'].str.contains(pattern_graded, na=False, case=False))
+
+            # find card number
+            if is_float(tmp_sch_phrase[-1]): # card num at end
+                card_num = tmp_sch_phrase.rsplit(maxsplit=1)[1].strip()
+            elif is_float(tmp_sch_phrase[0]): # card num at beginning
+                card_num = tmp_sch_phrase.split(maxsplit=1)[0].strip()
             else: # no card num provided
                 card_num = ''
             card_num = card_num.split('/')[0].strip() if '/' in card_num else card_num
             mask = mask & (dfls['title'].str.contains(f"{card_num}", na=False, case=False))
+        if st.session_state['sb']['rm_graded']:
+            mask = mask & (~dfls['title'].str.contains(pattern_graded, na=False, case=False))
+
+        # update mask filters
         dfls['include_lst_filters'] = mask
 
         # update filter mask
         st.session_state['itms'][itm_id]['dfls']['include_lst_filters'] = dfls['include_lst_filters']
         dfls = dfls.loc[mask] # lsts to display
+
+        # if no data returned
+        if len(dfls)==0:
+            st.write(f'### No listings available for: {sch_phrase} - {loc_map[item_loc]}')
+            return
 
         # set some data containers
         if st.session_state['sb']['show_pchart']: # price chart
@@ -222,7 +237,7 @@ def set_tsearch():
                                             label_visibility='collapsed',
                                             key=c1_key,
                                             value=lst['include_lst'])
-            st.session_state['itms'][itm_id]['dfls'].loc[ix, 'include_lst'] = _button_state
+            st.session_state['itms'][itm_id]['dfls'].loc[ix, 'include_lst'] = _button_state # updates on the fly
 
             # show img0
             contr_1.image(f"{lst['img_url0']}/s-l{c2_img_size}.webp", width='content')
