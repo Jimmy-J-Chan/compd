@@ -55,6 +55,7 @@ def save_session_state_data():
         save_fn = f"{save_code}.pkl"
         save_path = f"{os.getcwd()}/saved_data/{save_fn}"
         save2pkl(sd, save_path)
+        st.toast(f"Data saved", icon="✔️")
     pass
 
 def load_saved_data():
@@ -73,7 +74,7 @@ def load_saved_data():
                 sd = load_pkl(save_code_fpath)
                 for k in sd.keys():
                     st.session_state[k] = sd[k]
-                pass
+                st.toast(f"Data loaded", icon="✔️")
 
 
 def set_sidebar_elements():
