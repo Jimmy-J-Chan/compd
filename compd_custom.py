@@ -107,7 +107,7 @@ def set_tcustom(tab_name):
 
         # display inputs
         df2 = st.data_editor(df, num_rows='dynamic', hide_index=True, placeholder=None, key=f'df2_{tab_name}',
-                             column_order=['Name', 'Quantity', 'Price'],
+                             column_order=['Name', 'Price'],#['Name', 'Quantity', 'Price'],
                        column_config={'Price': st.column_config.NumberColumn('Price', format="$ %.2f"),
                                       'Quantity': st.column_config.NumberColumn('Quantity', format="%.0f")
                                       }
