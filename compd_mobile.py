@@ -19,7 +19,6 @@ st.set_page_config(page_title="Compd",
                    page_icon='./logo/compd_logo_white.png',
                    )
 
-
 def set_tsearch():
     def _set_stats_board():
         contr_stats = st.container(border=True)
@@ -446,7 +445,6 @@ def set_ttrade():
 
 
 def compd_mobile():
-    #st.write('compd - mobile')
     set_scroll2top_button()
     set_chrome_driver()
     set_session_state_groups()
@@ -455,7 +453,6 @@ def compd_mobile():
     set_tsearch()
     set_tport()
     set_ttrade()
-
     pass
 
 

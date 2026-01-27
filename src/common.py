@@ -1,3 +1,4 @@
+import pickle
 import streamlit as st
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -97,3 +98,12 @@ def is_float(value):
         return True
     except ValueError:
         return False
+
+def save2pkl(obj, save_path):
+    with open(save_path, 'wb') as f:
+        pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
+
+def load_pkl(save_path):
+    with open(save_path, 'rb') as file:
+        obj = pickle.load(file)
+    return obj

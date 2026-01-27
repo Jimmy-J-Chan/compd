@@ -1,9 +1,11 @@
+import os
+
 import streamlit as st
 import pandas as pd
 import altair as alt
 
 from conf.config import ss_g, hist2days, loc_map
-from src.common import set_scroll2top_button, set_chrome_driver, write_style_str, reduce_md_spacing, insert_spacer
+from src.common import set_scroll2top_button, set_chrome_driver, write_style_str, save2pkl, load_pkl
 from src.get_ebayau_listing_data import get_ebayau_listing_data, get_lst_imgs
 
 # page settings
@@ -37,6 +39,43 @@ def deselect_lstings():
             st.rerun()
     pass
 
+def save_session_state_data():
+    save_code = st.session_state['sb']['save_code']
+    if len(save_code)>0:
+        # save itms, pf keys
+        sd = {}
+        sd['itms'] = st.session_state['itms']
+        sd['pf'] = st.session_state['pf']
+
+        # save
+        sd_dir = f"{os.getcwd()}/saved_data"
+        if not os.path.isdir(sd_dir):
+            os.mkdir(sd_dir)
+
+        save_fn = f"{save_code}.pkl"
+        save_path = f"{os.getcwd()}/saved_data/{save_fn}"
+        save2pkl(sd, save_path)
+    pass
+
+def load_saved_data():
+    save_code = st.session_state.sb['save_code']
+    if len(save_code)>0:
+        _cwd = os.getcwd()
+        # check for saved_data dir
+        sd_dir = f"{_cwd}/saved_data"
+        if not os.path.isdir(sd_dir):
+            os.mkdir(sd_dir)
+        else:
+            # check if save file is available
+            save_code_fn = f"{save_code}.pkl"
+            save_code_fpath = f"{_cwd}/saved_data/{save_code_fn}"
+            if os.path.isfile(save_code_fpath):
+                sd = load_pkl(save_code_fpath)
+                for k in sd.keys():
+                    st.session_state[k] = sd[k]
+                pass
+
+
 def set_sidebar_elements():
     vers_num = '2026-01-23 1746'
     st.sidebar.image('./logo/compd_logo_white.png',)
@@ -65,6 +104,14 @@ def set_sidebar_elements():
     st.session_state['sb']['rm_best_offer'] = st.sidebar.toggle("Remove Best Offers", value=True)
     st.session_state['sb']['rm_graded'] = st.sidebar.toggle("Remove Graded Cards", value=True)
     st.session_state['sb']['mtch_card_num'] = st.sidebar.toggle("Match Card Num", value=True)
+
+    st.sidebar.markdown('<hr style="margin: 0px; border: 1px solid #ddd;">', unsafe_allow_html=True)
+    st.sidebar.write('__Save Code__:')
+    st.session_state['sb']['save_code'] = st.sidebar.text_input('', label_visibility='collapsed', placeholder='Enter save code')
+    if st.sidebar.button('Save Data'):
+        save_session_state_data()
+    if st.sidebar.button('Load Data'):
+        load_saved_data()
 
     # calc some params
     st.session_state['sb']['history_len_days'] = hist2days[st.session_state['sb']['history_len']]
