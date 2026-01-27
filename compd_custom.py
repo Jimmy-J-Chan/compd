@@ -114,7 +114,7 @@ def set_tcustom(tab_name):
                        )
 
         mask = df2['Quantity'].isnull()
-        df2.loc[mask,'Quantity'] = 0.
+        df2.loc[mask,'Quantity'] = 1
         st.session_state[tab_name]['df'] = df2
         update_total_header(tab_name)
         pass
