@@ -171,12 +171,6 @@ def compd_custom():
     set_tcustom(tab_name='me')
     set_tcustom(tab_name='you')
     set_ttrade()
-
-    # test
-    import os
-    _cwd = os.getcwd()
-    st.write(_cwd)
-    st.write(os.listdir(_cwd))
     pass
 
 

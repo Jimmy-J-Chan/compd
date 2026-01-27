@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import altair as alt
 import re
+import os
 
 from conf.config import ss_g, hist2days, loc_map
 from src.common import (set_scroll2top_button, set_chrome_driver, write_style_str, reduce_md_spacing, insert_spacer,
@@ -454,13 +455,6 @@ def compd_mobile():
     set_tsearch()
     set_tport()
     set_ttrade()
-
-    # test
-    import os
-    _cwd = os.getcwd()
-    st.write(_cwd)
-    st.write(os.listdir(_cwd))
-
     pass
 
 
