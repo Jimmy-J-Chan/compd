@@ -454,6 +454,12 @@ def compd_mobile():
     set_tsearch()
     set_tport()
     set_ttrade()
+
+    # test
+    import os
+    _cwd = os.getcwd()
+    st.write(_cwd)
+    st.write(os.listdir(_cwd))
     pass
 
 
