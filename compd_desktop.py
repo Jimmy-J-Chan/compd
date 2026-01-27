@@ -42,6 +42,11 @@ def deselect_lstings():
 def save_session_state_data():
     save_code = st.session_state['sb']['save_code']
     if len(save_code)>0:
+        # check if empty
+        if len(st.session_state['pf']['itms'].keys())==0:
+            st.toast(f"No data to save", icon="✔️")
+            return
+
         # save itms, pf keys
         sd = {}
         sd['itms'] = st.session_state['itms']
@@ -78,7 +83,7 @@ def load_saved_data():
 
 
 def set_sidebar_elements():
-    vers_num = '2026-01-27 1851'
+    vers_num = '2026-01-27 1859'
     st.sidebar.image('./logo/compd_logo_white.png',)
     if st.sidebar.button('Clear Data'):
         reset_session_state_params_data()
