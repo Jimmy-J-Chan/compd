@@ -270,7 +270,7 @@ def set_tsearch():
         if st.session_state['sb']['show_pchart']:
             _update_price_chart()
         _update_stats_board()
-        st.write(st.session_state['itms'][itm_id]['dfls'])
+        #st.write(st.session_state['itms'][itm_id]['dfls'])
 
 
     pass

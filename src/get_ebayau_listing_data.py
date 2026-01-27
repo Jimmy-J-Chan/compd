@@ -22,7 +22,7 @@ def parse_lsts(lsts):
 
         # header
         hdr = cts.find(class_="su-card-container__header")
-        dfls.loc[ix, 'sold_date'] = hdr.find(class_="s-card__caption").text
+        dfls.loc[ix, 'sold_date_str'] = hdr.find(class_="s-card__caption").text
         title_contents = hdr.find(class_="s-card__link").find(class_="s-card__title").contents
         dfls.loc[ix, 'title'] = title_contents[1].text if len(title_contents)>2 else title_contents[0].text
         dfls.loc[ix,'sold_url'] = hdr.find(class_="s-card__link").attrs['href']
@@ -60,7 +60,7 @@ def parse_lsts(lsts):
     mask = dfls['auction_type_str']=='Best Offer accepted'
     dfls.loc[mask,'auction_type'] = 'Best Offer'
 
-    dfls['sold_date'] = pd.to_datetime(dfls['sold_date'].str.strip('Sold '))
+    dfls['sold_date'] = pd.to_datetime(dfls['sold_date_str'].str.strip('Sold '), format='mixed')
     dfls['price'] = None
     dfls['num_p'] = dfls['price_str'].str.split('AU').str.len()-1
 
@@ -105,7 +105,7 @@ def get_lst_imgs(url, _driver):
         img_urls = []
     return img_urls
 
-@st.cache_data(ttl='1hr',max_entries=15,show_spinner=True)
+#@st.cache_data(ttl='5sec',max_entries=15,show_spinner=True)
 def get_ebayau_listing_data(sch_phrase, item_loc, ipg, _driver):
     if len(sch_phrase)==0:
         return pd.DataFrame()
@@ -151,8 +151,9 @@ def get_ebayau_listing_data(sch_phrase, item_loc, ipg, _driver):
 
 if __name__ == '__main__':
     driver = get_chrome_driver(headless=False, use_local=True)
-    sch_phrase = 'giratina v 186/196'
+    # sch_phrase = 'giratina v 186/196'
     # sch_phrase = 'mew ex 232'
+    sch_phrase = 'aerodactyl v 180'
     item_loc = 'Australia only'
     ipg = 60
     dfls = get_ebayau_listing_data(sch_phrase, item_loc, ipg, driver)
