@@ -174,8 +174,9 @@ def compd_custom():
 
     # test
     import os
-    st.write(os.getcwd())
-
+    _cwd = os.getcwd()
+    st.write(_cwd)
+    st.write(os.listdir(_cwd))
     pass
 
 
