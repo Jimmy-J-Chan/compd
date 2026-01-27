@@ -12,19 +12,14 @@ st.set_page_config(page_title="Compd Custom",
                    )
 
 
-def reset_session_state_params_data():
-    for g in ['bulk']: #$,'me','you','trade']:
-        st.session_state[g] = {}
-        pass
-    #     st.session_state[g] = {}
-    # for g in ['me','you']:
-    #     _name = f'df2_{g}'
-    #     if _name in st.session_state.keys():
-    #         del st.session_state[_name]
-    #     if 'df' in st.session_state[g].keys():
-    #         del st.session_state[g]['df']
-
-    pass
+# def reset_data():
+#     if 'df' in st.session_state['bulk'].keys():
+#         _df = st.session_state['bulk']['df']
+#         _df = _df.loc[_df['Name'].isin(['Common', 'Reverse Holo'])]
+#         _df['Quantity'] = 0.
+#         st.session_state['bulk']['df'] = _df
+#     #st.rerun()
+#     pass
 
 def set_session_state_groups():
     for g in ['tabs','bulk','me','you','trade']:
@@ -35,7 +30,7 @@ def set_sidebar_elements():
     vers_num = '2026-01-27 1602'
     st.sidebar.image('./logo/compd_logo_white.png',)
     # if st.sidebar.button('Clear Data'):
-    #     reset_session_state_params_data()
+    #     reset_data()
     st.sidebar.markdown('<hr style="margin: 0px; border: 1px solid #ddd;">', unsafe_allow_html=True)
     st.sidebar.write(f'__Version__: {vers_num}')
     st.sidebar.markdown('<hr style="margin: 0px; border: 1px solid #ddd;">', unsafe_allow_html=True)
@@ -84,6 +79,7 @@ def set_tbulk():
     df['Name'] = ['Common','Reverse Holo']
     df['Quantity'] = 0.
     df['Price'] = [0.2,1]
+
     with st.session_state['tabs']['bulk']:
         set_total_header(tab_name)
 
