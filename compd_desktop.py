@@ -44,7 +44,7 @@ def save_session_state_data():
     if len(save_code)>0:
         # check if empty
         if len(st.session_state['pf']['itms'].keys())==0:
-            st.toast(f"No data to save", icon="✔️")
+            st.toast(f"No data to save", icon="❌")
             return
 
         # save itms, pf keys
@@ -71,19 +71,21 @@ def load_saved_data():
         sd_dir = f"{_cwd}/saved_data"
         if not os.path.isdir(sd_dir):
             os.mkdir(sd_dir)
+
+        # check if save file is available
+        save_code_fn = f"{save_code}.pkl"
+        save_code_fpath = f"{_cwd}/saved_data/{save_code_fn}"
+        if os.path.isfile(save_code_fpath):
+            sd = load_pkl(save_code_fpath)
+            for k in sd.keys():
+                st.session_state[k] = sd[k]
+            st.toast(f"Data loaded", icon="✔️")
         else:
-            # check if save file is available
-            save_code_fn = f"{save_code}.pkl"
-            save_code_fpath = f"{_cwd}/saved_data/{save_code_fn}"
-            if os.path.isfile(save_code_fpath):
-                sd = load_pkl(save_code_fpath)
-                for k in sd.keys():
-                    st.session_state[k] = sd[k]
-                st.toast(f"Data loaded", icon="✔️")
+            st.toast(f"{save_code} - not available", icon="❌")
 
 
 def set_sidebar_elements():
-    vers_num = '2026-01-27 1859'
+    vers_num = '2026-01-27 1916'
     st.sidebar.image('./logo/compd_logo_white.png',)
     if st.sidebar.button('Clear Data'):
         reset_session_state_params_data()
