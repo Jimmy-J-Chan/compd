@@ -410,13 +410,21 @@ def set_ttrade():
         st.session_state.contr_trde = contr_trde
         contr_trde.write('#### Trade Analyser')
 
+        # set trade percentage
+        # contr_trde.number_input(label='__Trade %__: ', min_value=0, max_value=100, value=80, step=5, width=130)
+        contr_trde_pct = contr_trde.container(horizontal=True, gap='small', width='content',
+                                              vertical_alignment="top")
+        write_style_str(parent_obj=contr_trde_pct, str_out='Trade (%): ')
+        trade_pct = contr_trde_pct.number_input(label='', min_value=0, max_value=100,
+                                                value=80, step=5, width=130, label_visibility='collapsed',)
+
         # print balances
         dfpf = st.session_state.pf['dfpf']
         total_map = {}
         for pfn in pf_names:
-            #contr_trde.write(f"{pfn}")
+            trade_pct_pfn = trade_pct/100 if pfn=='You' else 1
             tmp_dfpf = dfpf.loc[dfpf['pf_name']==pfn]
-            total = (tmp_dfpf['price_input']*tmp_dfpf['include_itm']).sum()
+            total = (tmp_dfpf['price_input']*tmp_dfpf['include_itm']).sum() * trade_pct_pfn
             contr_trde.write(f"Total ({pfn}): **${total:.2f}**")
             total_map[pfn] = total
 
@@ -427,7 +435,6 @@ def set_ttrade():
             contr_trde.write(f"Balance: **You pay them ${-cash_bal:.2f}**")
         elif (cash_bal<=1) & (cash_bal >= -1):
             contr_trde.write(f"Balance: **Fair Trade**")
-
 
     ####################################################################################################################
     # so no error at the beginning
