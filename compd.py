@@ -6,11 +6,18 @@ from compd_mobile import compd_mobile
 ALWAYS_USE_DESKTOP = False
 
 
-if __name__ == '__main__':
+
+def run_compd_by_screen_width():
     screen_width = get_screen_width() # TODO: remove empty space
     if screen_width is not None:
         if (screen_width<1000) & (not ALWAYS_USE_DESKTOP):
             compd_mobile()
         else:
             compd_desktop()
+
+def run_compd():
+    compd_mobile()
+
+if __name__ == '__main__':
+    run_compd()
     pass
