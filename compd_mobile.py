@@ -60,6 +60,7 @@ def set_tsearch():
 
             if st.session_state['sb']['get_collectr_p']:
                 st.write(st.session_state['itms'][itm_id]['collectr'])
+
                 if len(st.session_state['itms'][itm_id]['collectr'].keys())>0:
                     cltr_p = st.session_state['itms'][itm_id]['collectr']['itm_p']
                     cltr_url = st.session_state['itms'][itm_id]['collectr']['sch_phrase_url']
