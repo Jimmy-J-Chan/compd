@@ -5,9 +5,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 import time
 import streamlit as st
-import urllib.parse
-from src.common import get_chrome_driver
-
+from src.common import get_chrome_driver, encode_str
+#import urllib.parse
 
 def close_chrome_driver(driver):
     driver.quit()
@@ -115,7 +114,7 @@ def get_ebayau_listing_data(sch_phrase, item_loc, ipg, _driver):
 
     # encode url
     base_url = r'https://www.ebay.com.au/sch/i.html?'
-    enc_sch_phrase = urllib.parse.urlencode({"_nkw": sch_phrase,})
+    enc_sch_phrase = encode_str(sch_phrase, r"_nkw")
     param_sold = '&LH_Sold=1&LH_Complete=1'
     param_item_loc = '&LH_PrefLoc=1' if item_loc=='Australia only' else '&LH_PrefLoc=2' #worldwide
     param_sort = '&_sop=13' # sort: ended recently
@@ -152,8 +151,8 @@ def get_ebayau_listing_data(sch_phrase, item_loc, ipg, _driver):
 if __name__ == '__main__':
     driver = get_chrome_driver(headless=False, use_local=True)
     # sch_phrase = 'giratina v 186/196'
-    # sch_phrase = 'mew ex 232'
-    sch_phrase = 'aerodactyl v 180'
+    sch_phrase = 'mew ex 232'
+    #sch_phrase = 'aerodactyl v 180'
     item_loc = 'Australia only'
     ipg = 60
     dfls = get_ebayau_listing_data(sch_phrase, item_loc, ipg, driver)

@@ -5,7 +5,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.core.os_manager import ChromeType
-
+import urllib.parse
 
 
 def set_scroll2top_button():
@@ -33,13 +33,13 @@ def set_scroll2top_button():
         unsafe_allow_html=True
     )
 
-def get_chrome_driver(headless=True, use_local=False):
+def get_chrome_driver(headless=True, use_local=False, max_window=False):
     # Set up Chrome options
     chrome_options = Options()
     if headless:
         chrome_options.add_argument("--headless")  # Uncomment to run without a visible window
     #chrome_options.add_argument("--disable-blink-features=AutomationControlled")
-    #chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
     chrome_options.add_argument("window-size=1280,800")
     chrome_options.add_argument("--disable-gpu")
 
@@ -48,6 +48,8 @@ def get_chrome_driver(headless=True, use_local=False):
     else:
         driver = webdriver.Chrome(service=Service(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()),
                                   options=chrome_options)
+    if max_window:
+        driver.maximize_window()
     return driver
 
 def set_chrome_driver():
@@ -107,3 +109,14 @@ def load_pkl(save_path):
     with open(save_path, 'rb') as file:
         obj = pickle.load(file)
     return obj
+
+def encode_str(str_phrase, param_name=''):
+    enc_str = urllib.parse.urlencode({param_name: str_phrase,})
+    if param_name=='':
+        enc_str = enc_str[1:].strip()
+    return enc_str
+
+
+if __name__ == '__main__':
+    enc_str = encode_str("charizard 4/102", )
+    pass

@@ -85,7 +85,7 @@ def load_saved_data():
 
 
 def set_sidebar_elements():
-    vers_num = '2026-01-28 1412'
+    vers_num = '2026-02-02 1700'
     st.sidebar.image('./logo/compd_logo_white.png',)
     if st.sidebar.button('Clear Data'):
         reset_session_state_params_data()
@@ -106,13 +106,19 @@ def set_sidebar_elements():
                                                            '3 months','6 months'], index=1)
 
     st.sidebar.markdown('<hr style="margin: 0px; border: 1px solid #ddd;">', unsafe_allow_html=True)
+
+    # widgets
     st.session_state['sb']['show_sltd_lsts'] = st.sidebar.toggle("Selected Listings Only", value=False)
     #st.session_state['sb']['deselect_lsts'] = st.sidebar.toggle("Deselect Listings", value=False)
     st.session_state['sb']['show_pchart'] = st.sidebar.toggle("Show Price Chart", value=True)
+    st.session_state['sb']['get_collectr_p'] = st.sidebar.toggle("Show Collectr Price", value=True)
+
+    # filter options
     st.session_state['sb']['rm_best_offer'] = st.sidebar.toggle("Remove Best Offers", value=True)
     st.session_state['sb']['rm_graded'] = st.sidebar.toggle("Remove Graded Cards", value=True)
     st.session_state['sb']['mtch_card_num'] = st.sidebar.toggle("Match Card Num", value=True)
 
+    # save
     st.sidebar.markdown('<hr style="margin: 0px; border: 1px solid #ddd;">', unsafe_allow_html=True)
     st.sidebar.write('__Save Code__:')
     st.session_state['sb']['save_code'] = st.sidebar.text_input('', label_visibility='collapsed', placeholder='Enter save code')

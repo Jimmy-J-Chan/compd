@@ -5,9 +5,10 @@ import re
 import os
 
 from conf.config import ss_g, hist2days, loc_map
-from src.common import (set_scroll2top_button, set_chrome_driver, write_style_str, reduce_md_spacing, insert_spacer,
+from src.common import (set_scroll2top_button, set_chrome_driver, write_style_str,
                         is_float)
 from src.get_ebayau_listing_data import get_ebayau_listing_data, get_lst_imgs
+from src.get_collectr_data import get_collectr_data
 
 from compd_desktop import (set_session_state_groups, set_sidebar_elements, set_tabs,
                            show_more_listing_imgs, show_pf_itm_listing)
@@ -56,6 +57,15 @@ def set_tsearch():
             contr_stats.write(stats['price_range_str'])
             contr_stats.write(stats['mean_str'])
             contr_stats.write(stats['median_str'])
+
+            if st.session_state['sb']['get_collectr_p']:
+                if len(st.session_state['itms'][itm_id]['collectr'].keys())>0:
+                    cltr_p = st.session_state['itms'][itm_id]['collectr']['itm_p']
+                    cltr_url = st.session_state['itms'][itm_id]['collectr']['sch_phrase_url']
+                    write_style_str(parent_obj=contr_stats, str_out=f'Collectr: ${cltr_p:.2f}', font_w='bold', color="#000000",
+                                    hyperlink=cltr_url)
+                else:
+                    contr_stats.write(f'Collectr: N/A')
 
             # add price
             contr_stats_p = contr_stats.container(horizontal=True, gap='small', width='content',
@@ -143,15 +153,10 @@ def set_tsearch():
         item_loc = st.session_state['sb']['item_loc']
         itm_id = f"{sch_phrase}_{loc_map[item_loc]}"
 
-        #save some keys
-        # st.session_state['sch_phrase_in'] = sch_phrase
-        # st.session_state['item_loc_in'] = item_loc
-        # st.session_state['itm_id_in'] = itm_id
-
+        driver = st.session_state.chrome_driver
         if itm_id not in st.session_state['itms'].keys():
             st.session_state['itms'][itm_id] = {}
             ipg = st.session_state['sb']['ipg']
-            driver = st.session_state.chrome_driver
             dfls = get_ebayau_listing_data(sch_phrase, item_loc, ipg, driver)
             dfls['include_lst'] = True # mask for btns
             dfls['include_lst_filters'] = False # mask for sidebar filters
@@ -159,18 +164,18 @@ def set_tsearch():
             st.session_state['itms'][itm_id]['sch_phrase'] = sch_phrase
             st.session_state['itms'][itm_id]['item_loc'] = item_loc
         else:
-            # # setup dfls - # remove lsts based on sidebar filtering options
-            # if st.session_state['sb']['deselect_lsts']: # start with listings unselected
-            #     st.session_state['itms'][itm_id]['dfls']['include_lst'] = False
-            # else:
-            #     st.session_state['itms'][itm_id]['dfls']['include_lst'] = True
-            # st.session_state['itms'][itm_id]['dfls']['include_lst_filters'] = False
             dfls = st.session_state['itms'][itm_id]['dfls'].copy()
 
         # if no data returned
         if len(dfls)==0:
             st.write(f'### No listings returned for: {sch_phrase} - {loc_map[item_loc]}')
             return
+
+        # get collectr price
+        if st.session_state['sb']['get_collectr_p']:
+            if 'collectr' not in st.session_state['itms'][itm_id].keys():
+                cltr_data = get_collectr_data(sch_phrase, driver)
+                st.session_state['itms'][itm_id]['collectr'] = cltr_data
 
         # prep the data to be displayed
         pattern_graded = r'(psa|cgc|bgs|beckett|ace|tag|ark)\s?([1-9](\.5)?|10)\b'
