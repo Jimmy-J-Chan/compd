@@ -41,6 +41,7 @@ def get_chrome_driver(headless=True, use_local=False, max_window=False):
     #chrome_options.add_argument("--disable-blink-features=AutomationControlled")
     chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
     chrome_options.add_argument("window-size=1280,800")
+    #chrome_options.add_argument("window-size=393,852")
     chrome_options.add_argument("--disable-gpu")
 
     if (st.context.url in ['http://localhost:8501']) | use_local:
@@ -54,7 +55,7 @@ def get_chrome_driver(headless=True, use_local=False, max_window=False):
 
 def set_chrome_driver():
     if 'chrome_driver' not in st.session_state.keys():
-        st.session_state.chrome_driver = get_chrome_driver()
+        st.session_state.chrome_driver = get_chrome_driver(max_window=True)
 
 def write_style_str(parent_obj=None, str_out=None, color=None, font_size=None, font_w=None, strike_through=False,
                     hyperlink=None):
