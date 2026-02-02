@@ -38,12 +38,12 @@ def get_chrome_driver(headless=True, use_local=False, max_window=False):
     chrome_options = Options()
     if headless:
         chrome_options.add_argument("--headless")  # Uncomment to run without a visible window
-    chrome_options.add_argument("--disable-blink-features=AutomationControlled")
-    iphone_ua = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Mobile/15E148 Safari/604.1"
-    chrome_options.add_argument(f"user-agent={iphone_ua}")
+    #chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+    #iphone_ua = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Mobile/15E148 Safari/604.1"
+    #chrome_options.add_argument(f"user-agent={iphone_ua}")
     #chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-    #chrome_options.add_argument("window-size=1280,800")
-    chrome_options.add_argument("window-size=393,852")
+    chrome_options.add_argument("window-size=1280,800")
+    #chrome_options.add_argument("window-size=393,852")
     chrome_options.add_argument("--disable-gpu")
 
     if (st.context.url in ['http://localhost:8501']) | use_local:

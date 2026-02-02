@@ -44,41 +44,47 @@ def get_collectr_data(sch_phrase, _driver):
     # Wait a few seconds for JavaScript to load the price data
     time.sleep(2)
 
-    # check currency in AUD
+    # check currency
     wait = WebDriverWait(driver, 2)
-    try:
-        xpath = "(//button[contains(., 'USD') or contains(., 'AUD')])[2]"
-        ccy_button = wait.until(EC.element_to_be_clickable((By.XPATH, xpath)))
-        ccy_button.click()
-        #time.sleep(1)
-    except:
-        try:
-            xpath = "//button[contains(., 'USD') or contains(., 'AUD')]"
-            ccy_button = wait.until(EC.element_to_be_clickable((By.XPATH, xpath)))
-            ccy_button.click()
-            #time.sleep(1)
-        except:
-            return {'error':'USD or AUD not selected'}
+    xpath = "(//button[contains(., 'USD') or contains(., 'AUD')])[2]"
+    ccy_button = wait.until(EC.element_to_be_clickable((By.XPATH, xpath)))
+    if ccy_button.text != 'USD':
+        return {'error': 'USD not selected'}
 
-    if ccy_button.text=='USD':
-        try:
-            # search for any element containing the text 'AUD' that is clickable
-            aud_selection_xpath = "//div[text()='AUD'] | //span[text()='AUD'] | //p[text()='AUD']"
-            aud_button = wait.until(EC.element_to_be_clickable((By.XPATH, aud_selection_xpath)))
-            aud_button.click()
-            #time.sleep(1)
-        except:
-            return {'error': 'could not select AUD'}
+    # wait = WebDriverWait(driver, 2)
+    # try:
+    #     xpath = "(//button[contains(., 'USD') or contains(., 'AUD')])[2]"
+    #     ccy_button = wait.until(EC.element_to_be_clickable((By.XPATH, xpath)))
+    #     ccy_button.click()
+    #     #time.sleep(1)
+    # except:
+    #     try:
+    #         xpath = "//button[contains(., 'USD') or contains(., 'AUD')]"
+    #         ccy_button = wait.until(EC.element_to_be_clickable((By.XPATH, xpath)))
+    #         ccy_button.click()
+    #         #time.sleep(1)
+    #     except:
+    #         return {'error':'USD or AUD not selected'}
+    #
+    # if ccy_button.text=='USD':
+    #     try:
+    #         # search for any element containing the text 'AUD' that is clickable
+    #         aud_selection_xpath = "//div[text()='AUD'] | //span[text()='AUD'] | //p[text()='AUD']"
+    #         aud_button = wait.until(EC.element_to_be_clickable((By.XPATH, aud_selection_xpath)))
+    #         aud_button.click()
+    #         #time.sleep(1)
+    #     except:
+    #         return {'error': 'could not select AUD'}
 
     # Get the page source and hand it over to BeautifulSoup
     soup = BeautifulSoup(driver.page_source, 'html.parser')
     all_itms = [c for c in soup.find_all(class_='h-full list-none')]
-
     if len(all_itms)==0:
-        return {}
+        return {'error': 'no data'}
     else:
         all_itms = all_itms[:1]
         df_all_itms = parse_all_itms(all_itms)
+        df_all_itms['ccy'] = ccy_button.text
 
         # return first itm
         cltr_d = df_all_itms.loc[0].to_dict()

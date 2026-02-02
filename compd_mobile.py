@@ -9,7 +9,7 @@ from src.common import (set_scroll2top_button, set_chrome_driver, write_style_st
                         is_float)
 from src.get_ebayau_listing_data import get_ebayau_listing_data, get_lst_imgs
 from src.get_collectr_data import get_collectr_data
-
+from src.get_fx_rate import get_audusd_rate
 from compd_desktop import (set_session_state_groups, set_sidebar_elements, set_tabs,
                            show_more_listing_imgs, show_pf_itm_listing)
 
@@ -175,9 +175,17 @@ def set_tsearch():
 
         # get collectr price
         if st.session_state['sb']['get_collectr_p']:
+            # get audusd rate t-1
+            if 'audusd' not in st.session_state.keys():
+                st.session_state['audusd'] = get_audusd_rate()
+
             if 'collectr' not in st.session_state['itms'][itm_id].keys():
                 cltr_data = get_collectr_data(sch_phrase, driver)
                 st.session_state['itms'][itm_id]['collectr'] = cltr_data
+                # convert usd price to aud
+                audusd = st.session_state['audusd']
+                itm_p = st.session_state['itms'][itm_id]['collectr']['itm_p']
+                st.session_state['itms'][itm_id]['collectr']['itm_p'] = itm_p/audusd
 
         # prep the data to be displayed
         pattern_graded = r'(psa|cgc|bgs|beckett|ace|tag|ark)\s?([1-9](\.5)?|10)\b'
