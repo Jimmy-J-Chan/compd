@@ -268,7 +268,6 @@ def set_tsearch():
             card_num0 = st.session_state['sb']['card_num0']
             mask = mask & (dfls['title'].str.contains(f"{card_num0}", na=False, case=False))
             pass
-        st.write(st.session_state['sb'])
 
         # update mask filters
         dfls['include_lst_filters'] = mask
