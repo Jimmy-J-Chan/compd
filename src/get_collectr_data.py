@@ -94,6 +94,6 @@ def get_collectr_data(sch_phrase, _driver):
 
 if __name__ == '__main__':
     driver = get_chrome_driver(headless=True, use_local=True, max_window=True)
-    sch_phrase = 'mew ex 232'
+    sch_phrase = 'gengar fossil 5'
     cltr_d = get_collectr_data(sch_phrase, driver)
     pass

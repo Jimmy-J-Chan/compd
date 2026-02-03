@@ -60,6 +60,7 @@ def set_tsearch():
 
             if st.session_state['sb']['get_collectr_p']:
                 cltr_d = st.session_state['itms'][itm_id]['collectr']
+                st.write(cltr_d)
                 if (len(cltr_d.keys())>0) & ('error' not in cltr_d.keys()):
                     cltr_p = st.session_state['itms'][itm_id]['collectr']['itm_p']
                     cltr_url = st.session_state['itms'][itm_id]['collectr']['sch_phrase_url']
@@ -181,10 +182,12 @@ def set_tsearch():
             if 'collectr' not in st.session_state['itms'][itm_id].keys():
                 cltr_data = get_collectr_data(sch_phrase, driver)
                 st.session_state['itms'][itm_id]['collectr'] = cltr_data
+
                 # convert usd price to aud
-                audusd = st.session_state['audusd']
-                itm_p = st.session_state['itms'][itm_id]['collectr']['itm_p']
-                st.session_state['itms'][itm_id]['collectr']['itm_p'] = itm_p/audusd
+                if 'itm_p' in cltr_data.keys():
+                    audusd = st.session_state['audusd']
+                    itm_p = st.session_state['itms'][itm_id]['collectr']['itm_p']
+                    st.session_state['itms'][itm_id]['collectr']['itm_p'] = itm_p/audusd
 
         # prep the data to be displayed
         pattern_graded = r'(psa|cgc|bgs|beckett|ace|tag|ark)\s?([1-9](\.5)?|10)\b'
