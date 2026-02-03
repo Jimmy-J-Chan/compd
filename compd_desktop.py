@@ -85,7 +85,7 @@ def load_saved_data():
 
 
 def set_sidebar_elements():
-    vers_num = '2026-02-02 1839'
+    vers_num = '2026-02-03 1536'
     st.sidebar.image('./logo/compd_logo_white.png',)
     if st.sidebar.button('Clear Data'):
         reset_session_state_params_data()
@@ -117,6 +117,7 @@ def set_sidebar_elements():
     st.session_state['sb']['rm_best_offer'] = st.sidebar.toggle("Remove Best Offers", value=True)
     st.session_state['sb']['rm_graded'] = st.sidebar.toggle("Remove Graded Cards", value=True)
     st.session_state['sb']['mtch_card_num'] = st.sidebar.toggle("Match Card Num", value=True)
+    st.session_state['sb']['mtch_srch_phrase'] = st.sidebar.toggle("Match Search Phrase", value=True)
 
     # save
     st.sidebar.markdown('<hr style="margin: 0px; border: 1px solid #ddd;">', unsafe_allow_html=True)
