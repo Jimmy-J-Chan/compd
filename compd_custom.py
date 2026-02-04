@@ -1,7 +1,7 @@
 import pandas as pd
 import streamlit as st
 from conf.config import *
-from src.common import set_scroll2top_button
+from src.common import set_scroll2top_button, write_style_str
 
 # page settings
 st.set_page_config(page_title="Compd Custom",
@@ -27,15 +27,15 @@ def set_session_state_groups():
             st.session_state[g] = {}
 
 def set_sidebar_elements():
-    vers_num = '2026-01-27 1602'
+    vers_num = '2026-02-04 1554'
     st.sidebar.image('./logo/compd_logo_white.png',)
     # if st.sidebar.button('Clear Data'):
     #     reset_data()
     st.sidebar.markdown('<hr style="margin: 0px; border: 1px solid #ddd;">', unsafe_allow_html=True)
     st.sidebar.write(f'__Version__: {vers_num}')
-    st.sidebar.markdown('<hr style="margin: 0px; border: 1px solid #ddd;">', unsafe_allow_html=True)
-    st.session_state['trade_pct'] = st.sidebar.number_input("Trade percentage (%)", min_value=0, max_value=100,
-                                                            value=80, step=5)
+    # st.sidebar.markdown('<hr style="margin: 0px; border: 1px solid #ddd;">', unsafe_allow_html=True)
+    # st.session_state['trade_pct'] = st.sidebar.number_input("Trade percentage (%)", min_value=0, max_value=100,
+    #                                                         value=80, step=5)
 
 
 def set_tabs():
@@ -62,11 +62,11 @@ def update_total_header(tab_name):
         contr_header.write(f"Items: **{num_itms:.0f}**")
         contr_header.write(f"Total: **${total:.2f}**")
 
-        # print total(pct) if pf=you
-        # trade at the give pct
-        if tab_name == 'you':
-            pct_trade = st.session_state['trade_pct']
-            contr_header.write(f"Total ({pct_trade}%): **${total*pct_trade/100:.2f}**")
+        # # print total(pct) if pf=you
+        # # trade at the give pct
+        # if tab_name == 'you':
+        #     pct_trade = st.session_state['trade_pct']
+        #     contr_header.write(f"Total ({pct_trade}%): **${total*pct_trade/100:.2f}**")
     pass
 
 
@@ -76,9 +76,9 @@ def set_tbulk():
     df = df.astype({'Name':str,
                     'Quantity':float,
                     'Price':float})
-    df['Name'] = ['Common','Reverse Holo']
+    df['Name'] = ['Common','Reverse Holo', 'Exs']
     df['Quantity'] = 0.
-    df['Price'] = [0.2,1]
+    df['Price'] = [0.2,1,2]
 
     with st.session_state['tabs']['bulk']:
         set_total_header(tab_name)
@@ -128,24 +128,60 @@ def set_ttrade():
         #st.session_state['trade'].contr_trde = contr_trde
         contr_trde.write('#### Trade Analyser')
 
+        # set trade percentage
+        contr_trde_pct = contr_trde.container(horizontal=True, gap='small', width='content',
+                                              vertical_alignment="top")
+        write_style_str(parent_obj=contr_trde_pct, str_out='Trade (%): ')
+        trade_pct = contr_trde_pct.number_input(label='', min_value=0, max_value=100,
+                                                value=80, step=5, width=130, label_visibility='collapsed',)
+
+        # set cash percentage
+        contr_cash_pct = contr_trde.container(horizontal=True, gap='small', width='content',
+                                              vertical_alignment="top")
+        write_style_str(parent_obj=contr_cash_pct, str_out='Cash (%): ')
+        cash_pct = contr_cash_pct.number_input(label='', min_value=0, max_value=100,
+                                                value=70, step=5, width=130, label_visibility='collapsed',)
+
         # print balances
+        contr_trde.write('#### Totals')
         total_map = {}
         for pfn in pf_names:
-            tmp_pct_trade = pct_trade/100 if pfn=='you' else 1
+            tmp_pct_trade = trade_pct/100 if pfn=='you' else 1
             tmp_df = st.session_state[pfn]['df']
-            total = (tmp_df['Price']*tmp_df['Quantity']).sum() * tmp_pct_trade
-            _bstr = 'Total' if pfn=='me' else f"Total ({pct_trade}%)"
-            contr_trde.write(f"{_bstr} ({pfn.capitalize()}): **${total:.2f}**")
-            total_map[pfn] = total
+            total = (tmp_df['Price']*tmp_df['Quantity']).sum()
+            total_pct = total * tmp_pct_trade
+            total_map[pfn] = total_pct
+
+            _pfn_str = pfn.capitalize()
+            _str = f"{_pfn_str}:  **\${total_pct:.2f}**"
+            _str = _str if pfn=='me' else f"{_str} -- [**{trade_pct}\%** of **\${total:.2f}**]"
+            contr_trde.write(_str)
+
+            # _bstr = 'Total' if pfn=='me' else f"Total ({pct_trade}%)"
+            # contr_trde.write(f"{_bstr} ({pfn.capitalize()}): **${total:.2f}**")
 
         # print trade balance
-        cash_bal = total_map['me'] - total_map['you']
-        if cash_bal>1:
+        t_me = total_map['me']
+        t_you = total_map['you']
+        cash_bal = abs(t_me - t_you)
+        contr_trde.markdown('<hr style="margin: 0px; border: 1px solid #ddd;">', unsafe_allow_html=True)
+        if t_me > t_you:
             contr_trde.write(f"Balance: **They pay you ${cash_bal:.2f}**")
-        elif cash_bal<-1:
-            contr_trde.write(f"Balance: **You pay them ${-cash_bal:.2f}**")
+        elif t_you > t_me:
+            cash_out = (cash_bal/trade_pct)*cash_pct
+            contr_trde.write(f"Remaining Trade Credit: **${cash_bal:.2f}**")
+            contr_trde.write(f"OR Cash Out: **\${cash_out:.2f}** -- [\${cash_bal:.2f} / {trade_pct:.0f}\% * {cash_pct:.0f}\%]")
         elif (cash_bal<=1) & (cash_bal >= -1):
             contr_trde.write(f"Balance: **Fair Trade**")
+
+
+
+        # if cash_bal>1:
+        #     contr_trde.write(f"Balance: **They pay you ${cash_bal:.2f}**")
+        # elif cash_bal<-1:
+        #     contr_trde.write(f"Balance: **You pay them ${-cash_bal:.2f}**")
+        # elif (cash_bal<=1) & (cash_bal >= -1):
+        #     contr_trde.write(f"Balance: **Fair Trade**")
 
 
     ####################################################################################################################
@@ -155,7 +191,6 @@ def set_ttrade():
 
     pf_names = ['me','you']
     tb_p = st.session_state['tabs']['trade']
-    pct_trade = st.session_state['trade_pct']
     with tb_p:
         _set_trade_board()
     pass
