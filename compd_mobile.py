@@ -478,28 +478,44 @@ def set_ttrade():
         contr_trde.write('#### Trade Analyser')
 
         # set trade percentage
-        # contr_trde.number_input(label='__Trade %__: ', min_value=0, max_value=100, value=80, step=5, width=130)
         contr_trde_pct = contr_trde.container(horizontal=True, gap='small', width='content',
                                               vertical_alignment="top")
         write_style_str(parent_obj=contr_trde_pct, str_out='Trade (%): ')
         trade_pct = contr_trde_pct.number_input(label='', min_value=0, max_value=100,
                                                 value=80, step=5, width=130, label_visibility='collapsed',)
 
+        # set cash percentage
+        contr_cash_pct = contr_trde.container(horizontal=True, gap='small', width='content',
+                                              vertical_alignment="top")
+        write_style_str(parent_obj=contr_cash_pct, str_out='Cash (%): ')
+        cash_pct = contr_cash_pct.number_input(label='', min_value=0, max_value=100,
+                                                value=70, step=5, width=130, label_visibility='collapsed',)
+
         # print balances
+        contr_trde.write('#### Totals')
         dfpf = st.session_state.pf['dfpf']
         total_map = {}
         for pfn in pf_names:
             trade_pct_pfn = trade_pct/100 if pfn=='You' else 1
             tmp_dfpf = dfpf.loc[dfpf['pf_name']==pfn]
-            total = (tmp_dfpf['price_input']*tmp_dfpf['include_itm']).sum() * trade_pct_pfn
-            contr_trde.write(f"Total ({pfn}): **${total:.2f}**")
-            total_map[pfn] = total
+            total = (tmp_dfpf['price_input']*tmp_dfpf['include_itm']).sum()
+            total_pct = total * trade_pct_pfn
+            total_map[pfn] = total_pct
 
-        cash_bal = total_map['Me'] - total_map['You']
-        if cash_bal>1:
+            _str = f"{pfn}:  **\${total_pct:.2f}**"
+            _str = _str if pfn=='Me' else f"{_str} -- [**{trade_pct}\%** of **\${total:.2f}**]"
+            contr_trde.write(_str)
+
+        t_me = total_map['Me']
+        t_you = total_map['You']
+        cash_bal = abs(t_me - t_you)
+        contr_trde.markdown('<hr style="margin: 0px; border: 1px solid #ddd;">', unsafe_allow_html=True)
+        if t_me > t_you:
             contr_trde.write(f"Balance: **They pay you ${cash_bal:.2f}**")
-        elif cash_bal<-1:
-            contr_trde.write(f"Balance: **You pay them ${-cash_bal:.2f}**")
+        elif t_you > t_me:
+            cash_out = (cash_bal/trade_pct)*cash_pct
+            contr_trde.write(f"Remaining Trade Credit: **${cash_bal:.2f}**")
+            contr_trde.write(f"OR Cash Out: **\${cash_out:.2f}** -- [\${cash_bal:.2f} / {trade_pct:.0f}\% * {cash_pct:.0f}\%]")
         elif (cash_bal<=1) & (cash_bal >= -1):
             contr_trde.write(f"Balance: **Fair Trade**")
 
