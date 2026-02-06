@@ -273,7 +273,6 @@ def set_tsearch():
             # match card number
             card_num0 = st.session_state['sb']['card_num0']
             mask = mask & (dfls['title'].str.contains(f"{card_num0}", na=False, case=False))
-            pas
         if st.session_state['sb']['rm_outliers']:
             # identify and remove outliers
             dfls['include_lst_filters'] = mask
