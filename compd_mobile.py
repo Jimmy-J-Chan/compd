@@ -11,6 +11,7 @@ from src.common import (set_scroll2top_button, set_chrome_driver, write_style_st
 from src.get_ebayau_listing_data import get_ebayau_listing_data, get_lst_imgs
 from src.get_collectr_data import get_collectr_data
 from src.get_fx_rate import get_audusd_rate
+from src.identify_lst_outliers import identify_lst_outliers
 from compd_desktop import (set_session_state_groups, set_sidebar_elements, set_tabs,
                            show_more_listing_imgs, show_pf_itm_listing)
 
@@ -272,10 +273,16 @@ def set_tsearch():
             # match card number
             card_num0 = st.session_state['sb']['card_num0']
             mask = mask & (dfls['title'].str.contains(f"{card_num0}", na=False, case=False))
-            pass
+            pas
+        if st.session_state['sb']['rm_outliers']:
+            # identify and remove outliers
+            dfls['include_lst_filters'] = mask
+            dfls = identify_lst_outliers(dfls)
+            mask = mask & (~dfls['is_outlier'])
 
         # update mask filters
         dfls['include_lst_filters'] = mask
+        st.write(dfls)
 
         # update filter mask
         st.session_state['itms'][itm_id]['dfls']['include_lst_filters'] = dfls['include_lst_filters']

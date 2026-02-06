@@ -120,6 +120,8 @@ def encode_str(str_phrase, param_name=''):
     return enc_str
 
 
+
+
 if __name__ == '__main__':
     enc_str = encode_str("charizard 4/102", )
     pass
