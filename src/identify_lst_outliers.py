@@ -53,7 +53,7 @@ def identify_lst_outliers(dfls):
     upper_thr = max(median + width*std_robust, 0)
     lower_thr = median - width*std_robust
 
-    st.write(median, std_robust, upper_thr, lower_thr)
+    #st.write(median, std_robust, upper_thr, lower_thr)
 
     # identify outliers
     tmpdf['is_outlier'] = False

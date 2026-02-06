@@ -282,7 +282,7 @@ def set_tsearch():
 
         # update mask filters
         dfls['include_lst_filters'] = mask
-        st.write(dfls)
+        #st.write(dfls)
 
         # update filter mask
         st.session_state['itms'][itm_id]['dfls']['include_lst_filters'] = dfls['include_lst_filters']
