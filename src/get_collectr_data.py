@@ -20,7 +20,7 @@ def parse_all_itms(all_itms):
         itmd['name'] = l1.find('span').text.strip()
         itmd['set'] = l1div[1].find_all('div',recursive=False)[0].text.strip()
         itmd['rarity'] = itm_meta[0].text.strip()
-        itmd['itm_number'] = itm_meta[2].text.strip()
+        itmd['itm_number'] = itm_meta[2].text.strip() if len(itm_meta)>1 else ''
         itmd['itm_p_str'] = itm_p[0].find('div').find('span').text
         itmd['itm_p'] = float(itmd['itm_p_str'].strip('A$').strip())
         img_url = l1div[0].find('img', recursive=False).attrs['src']
@@ -94,6 +94,7 @@ def get_collectr_data(sch_phrase, _driver):
 
 if __name__ == '__main__':
     driver = get_chrome_driver(headless=True, use_local=True, max_window=True)
-    sch_phrase = 'gengar fossil 5'
+    sch_phrase = 'gengar 5'
+    sch_phrase = 'destined rivals booster bundle'
     cltr_d = get_collectr_data(sch_phrase, driver)
     pass
