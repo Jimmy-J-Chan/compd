@@ -3,6 +3,7 @@ import pandas as pd
 import altair as alt
 import re
 import os
+import string
 
 from conf.config import ss_g, hist2days, loc_map
 from src.common import (set_scroll2top_button, set_chrome_driver, write_style_str,
@@ -252,17 +253,21 @@ def set_tsearch():
             # match card number
             card_num0 = st.session_state['sb']['card_num0']
             mask = mask & (dfls['title'].str.contains(f"{card_num0}", na=False, case=False))
-
         if st.session_state['sb']['rm_graded']:
             mask = mask & (~dfls['title'].str.contains(pattern_graded, na=False, case=False))
         if st.session_state['sb']['mtch_srch_phrase']:
             # must have name and card num in srch
+            # remove punctuation first
             card_name = st.session_state['sb']['card_name']
+            table = str.maketrans('', '', string.punctuation)
+            card_name = card_name.translate(table)
             card_name_tokens = [c.strip() for c in card_name.split(' ')]
 
             # each token needs to be in the title
+            # remove punctuation first
+            dfls['title_stripped'] = dfls['title'].str.replace(r'[^\w\s]', '', regex=True)
             for token in card_name_tokens:
-                mask = mask & (dfls['title'].str.contains(token, na=False, case=False))
+                mask = mask & (dfls['title_stripped'].str.contains(token, na=False, case=False))
 
             # match card number
             card_num0 = st.session_state['sb']['card_num0']

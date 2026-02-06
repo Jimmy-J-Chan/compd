@@ -103,7 +103,7 @@ def set_sidebar_elements():
                                                         ['Australia only', 'Worldwide'], index=0)
     st.session_state['sb']['history_len'] = st.sidebar.radio("History",
                                                           ['1 week', '2 weeks','3 weeks','4 weeks',
-                                                           '3 months','6 months'], index=1)
+                                                           '3 months','6 months'], index=2)
 
     st.sidebar.markdown('<hr style="margin: 0px; border: 1px solid #ddd;">', unsafe_allow_html=True)
 
@@ -117,7 +117,7 @@ def set_sidebar_elements():
     st.session_state['sb']['rm_best_offer'] = st.sidebar.toggle("Remove Best Offers", value=True)
     st.session_state['sb']['rm_graded'] = st.sidebar.toggle("Remove Graded Cards", value=True)
     st.session_state['sb']['mtch_card_num'] = st.sidebar.toggle("Match Card Num", value=True)
-    st.session_state['sb']['mtch_srch_phrase'] = st.sidebar.toggle("Match Search Phrase", value=True)
+    st.session_state['sb']['mtch_srch_phrase'] = st.sidebar.toggle("Match Search Phrase", value=False)
 
     # save
     st.sidebar.markdown('<hr style="margin: 0px; border: 1px solid #ddd;">', unsafe_allow_html=True)
