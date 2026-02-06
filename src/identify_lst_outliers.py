@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from pathlib import Path
+import streamlit as st
 
 def linear_reg(X,y):
     X_mat = X.values
@@ -51,6 +52,8 @@ def identify_lst_outliers(dfls):
     width = 5
     upper_thr = max(median + width*std_robust, 0)
     lower_thr = median - width*std_robust
+
+    st.write(median, std_robust, upper_thr, lower_thr)
 
     # identify outliers
     tmpdf['is_outlier'] = False
