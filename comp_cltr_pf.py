@@ -149,7 +149,7 @@ def update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts=True):
         dfls_filtered = filter_ebay_data(sch_phrase, dfls)
         dfls_filtered_applied = dfls_filtered.loc[dfls_filtered['include_lst_filters']]
 
-        # get mkt price
+        # calc median prices
         today = pd.Timestamp.today().normalize()
         for hz_str in hist_lens.keys():
             hist_sdate = today - pd.Timedelta(days=hist_lens[hz_str])
