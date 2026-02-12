@@ -6,7 +6,7 @@ import time
 from bs4 import BeautifulSoup
 
 from src.common import encode_str, get_chrome_driver
-
+from src.map_collectr_frame_url import map_psa_frame_url
 
 def parse_all_itms(all_itms):
     df = []
@@ -22,12 +22,27 @@ def parse_all_itms(all_itms):
         itmd['rarity'] = itm_meta[0].text.strip()
         itmd['itm_number'] = itm_meta[2].text.strip() if len(itm_meta)>1 else ''
         itmd['itm_p_str'] = itm_p[0].find('div').find('span').text
-        itmd['itm_p'] = float(itmd['itm_p_str'].strip('A$').strip())
-        img_url = l1div[0].find('img', recursive=False).attrs['src']
-        product_id = img_url.split('?')[0].strip('https://public.getcollectr.com/public-assets/products/product_.jpg').strip()
-        itmd['itm_url'] = f"https://app.getcollectr.com/explore/product/{product_id}"
+
+        # need to infer psa grade from img
+        if len(l1div[0].find_all('img', recursive=False))==1:
+            itmd['graded'] = '' # non-graded
+        elif len(l1div[0].find_all('img', recursive=False))==0:
+            # graded
+            img_graded = l1div[0].find('div').find_all('img', recursive=False)
+            frame_url = img_graded[0].attrs['src'].split('?')[0]
+            psa_grade = map_psa_frame_url[frame_url]
+            itmd['graded'] = psa_grade
+
+        # itmd['itm_p'] = float(itmd['itm_p_str'].strip('A$').replace(',','').strip())
+        # img_url = l1div[0].find('img', recursive=False).attrs['src']
+        # product_id = img_url.split('?')[0].strip('https://public.getcollectr.com/public-assets/products/product_.jpg').strip()
+        # itmd['itm_url'] = f"https://app.getcollectr.com/explore/product/{product_id}"
         df.append(itmd)
     df = pd.DataFrame(df)
+
+    # Extracts digits, decimals, and optional minus signs
+    df['itm_p'] = df['itm_p_str'].str.extract(r'([-+]?[\d,]*\.?\d+)')
+    df['itm_p'] = df['itm_p'].str.replace(',','').astype(float)
     return df
 
 

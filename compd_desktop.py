@@ -6,7 +6,7 @@ import altair as alt
 
 from conf.config import ss_g, hist2days, loc_map
 from src.common import set_scroll2top_button, set_chrome_driver, write_style_str, save2pkl, load_pkl
-from src.get_ebayau_listing_data import get_ebayau_listing_data, get_lst_imgs
+from src.get_ebayau_listing_data import get_ebayau_listing_data_st, get_lst_imgs
 
 # page settings
 st.set_page_config(page_title="Compd",
@@ -271,7 +271,7 @@ def set_tsearch():
 
             ipg = st.session_state['sb']['ipg']
             driver = st.session_state.chrome_driver
-            dfls = get_ebayau_listing_data(sch_phrase, item_loc, ipg, driver)
+            dfls = get_ebayau_listing_data_st(sch_phrase, item_loc, ipg, driver)
             dfls['include_lst'] = False
             st.session_state['itms'][itm_id]['dfls'] = dfls
             st.session_state['itms'][itm_id]['sch_phrase'] = sch_phrase

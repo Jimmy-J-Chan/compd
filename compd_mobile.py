@@ -8,7 +8,7 @@ import string
 from conf.config import ss_g, hist2days, loc_map
 from src.common import (set_scroll2top_button, set_chrome_driver, write_style_str,
                         is_float)
-from src.get_ebayau_listing_data import get_ebayau_listing_data, get_lst_imgs
+from src.get_ebayau_listing_data import get_ebayau_listing_data_st, get_lst_imgs
 from src.get_collectr_data import get_collectr_data
 from src.get_fx_rate import get_audusd_rate
 from src.identify_lst_outliers import identify_lst_outliers
@@ -197,7 +197,7 @@ def set_tsearch():
         if itm_id not in st.session_state['itms'].keys():
             st.session_state['itms'][itm_id] = {}
             ipg = st.session_state['sb']['ipg']
-            dfls = get_ebayau_listing_data(sch_phrase, item_loc, ipg, driver)
+            dfls = get_ebayau_listing_data_st(sch_phrase, item_loc, ipg, driver)
             dfls['include_lst'] = True # mask for btns
             dfls['include_lst_filters'] = False # mask for sidebar filters
             st.session_state['itms'][itm_id]['dfls'] = dfls.copy()
