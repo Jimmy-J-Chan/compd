@@ -5,6 +5,8 @@ import re
 import os
 import string
 
+from streamlit import title
+
 from conf.config import ss_g, hist2days, loc_map
 from src.common import (set_scroll2top_button, set_chrome_driver, write_style_str,
                         is_float)
@@ -124,8 +126,19 @@ def set_tsearch():
             y_scatter_axis = alt.Y(f'{y_scatter_col_name}:Q', scale=alt.Scale(domain=[y_axis_min, y_axis_max]), title=None, axis=alt.Axis(grid=False))
             y_line_axis = alt.Y(f'{y_line_col_name}:Q', scale=alt.Scale(domain=[y_axis_min, y_axis_max]), title=None, axis=alt.Axis(grid=False))
 
-            line = alt.Chart(_dfls).mark_line(color='blue', size=2,
-                                              opacity=0.5,).encode(x=x_axis, y=y_line_axis)
+            line = alt.Chart(_dfls).mark_line(color='blue',
+                                              size=2,
+                                              opacity=0.5,).encode(x=x_axis,
+                                                                   y=y_line_axis).properties(
+                title=alt.TitleParams(
+                    text=f'Source: Ebay {loc_map[item_loc]}',
+                    anchor='start',  # Align to the left
+                    offset=-40,  # Negative value moves it INSIDE the chart
+                    dx=40,  # Fine-tune horizontal padding from the axis
+                    fontSize=17,
+                    color='#3f4039',
+                )
+            )
             scatter = alt.Chart(_dfls).mark_point(color='red', size=200,
                                                   filled=False, opacity=0.5,
                                                   strokeWidth=2).encode(x=x_axis, y=y_scatter_axis)
