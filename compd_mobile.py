@@ -133,7 +133,7 @@ def set_tsearch():
                 title=alt.TitleParams(
                     text=f'Source: Ebay {loc_map[item_loc]}',
                     anchor='start',  # Align to the left
-                    offset=-40,  # Negative value moves it INSIDE the chart
+                    offset=-35,  # Negative value moves it INSIDE the chart
                     dx=40,  # Fine-tune horizontal padding from the axis
                     fontSize=17,
                     color='#3f4039',
