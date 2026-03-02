@@ -18,5 +18,4 @@ def run_compd():
 
 if __name__ == '__main__':
     run_compd()
-
     pass
