@@ -55,6 +55,8 @@ def set_tsearch():
                      'price_max': _dfls['price'].max(),
                      'mean': _dfls['price'].mean(),
                      'median': _dfls['price'].median(),
+                     'q75': _dfls['price'].quantile(0.75),
+                     'q75_str': f"Quantile (75%): **${_dfls['price'].quantile(0.75):.2f}**",
                      }
 
             contr_stats = st.session_state.contr_stats
@@ -63,6 +65,9 @@ def set_tsearch():
             contr_stats.write(stats['price_range_str'])
             contr_stats.write(stats['mean_str'])
             contr_stats.write(stats['median_str'])
+
+            # print quantiles
+            contr_stats.write(stats['q75_str'])
 
             if st.session_state['sb']['get_collectr_p']:
                 cltr_d = st.session_state['itms'][itm_id]['collectr']
@@ -79,11 +84,11 @@ def set_tsearch():
                                                   vertical_alignment="top")
             write_style_str(parent_obj=contr_stats_p, str_out='Price: ')
             price_input = contr_stats_p.text_input(label='', label_visibility='collapsed',
-                                                   placeholder=f"{stats['mean']:.2f}",
+                                                   placeholder=f"{stats['median']:.2f}",
                                                    key="price_input", width=100)
             # set default value
             if len(price_input)==0:
-                price_input = stats['mean']
+                price_input = stats['median']
 
             try:
                 price_input = float(price_input)
@@ -142,7 +147,19 @@ def set_tsearch():
             scatter = alt.Chart(_dfls).mark_point(color='red', size=200,
                                                   filled=False, opacity=0.5,
                                                   strokeWidth=2).encode(x=x_axis, y=y_scatter_axis)
-            contr_pchart.altair_chart(scatter + line, use_container_width=True, theme=None)
+
+
+            # plot all charts together
+            add_q75_pline = st.session_state['sb']['add_q75_pline']
+            if add_q75_pline:
+                _dfls['q75'] = _dfls['price'].quantile(0.75)
+                yq75_line_axis = alt.Y('q75:Q', scale=alt.Scale(domain=[y_axis_min, y_axis_max]), title=None,
+                                       axis=alt.Axis(grid=False))
+                q75line = alt.Chart(_dfls).mark_line(color='orange', size=1.2, opacity=0.6, ).encode(x=x_axis,
+                                                                                                   y=yq75_line_axis)
+                contr_pchart.altair_chart(scatter + line + q75line, use_container_width=True, theme=None)
+            else:
+                contr_pchart.altair_chart(scatter + line, use_container_width=True, theme=None)
         else:
             write_style_str(parent_obj=contr_pchart,
                             str_out="Select more listings to generate price chart",
