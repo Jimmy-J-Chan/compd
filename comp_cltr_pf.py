@@ -103,18 +103,19 @@ def filter_ebay_data(sch_phrase, dfls):
     return tmpdf
 
 
-def update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts=True):
+def update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts_only=True):
     # parameters
+    today = pd.Timestamp.today().normalize()
     item_loc = 'Australia only'
     ipg = 60 if item_loc=='Australia only' else 120
-    hist_lens = {'1 week':7, '2 weeks':14,'3 weeks':21,'4 weeks':28, 'max':28*6}
+    hist_lens = {'1 week':7, '2 weeks':14,'3 weeks':21,'4 weeks':28}#, 'max':28*6}
 
     # load pf
     pf = pd.read_csv(pf_loc)
-    pf_ebay = pd.read_csv(pf_ebay_loc) if os.path.isfile(pf_ebay_loc) else pf
-    if 'price_mkt' not in pf_ebay.columns:
-        for c in [f"price_ebay_median_{c}" for c in hist_lens.keys()] + ['price_mkt']:
-            pf_ebay[c] = None
+    pcols = [f"price_ebay_median_{c}" for c in hist_lens.keys()] + [f"price_ebay_max_{c}" for c in hist_lens.keys()]
+    if pcols[0] not in pf.columns:
+        for c in pcols:
+            pf[c] = None
 
     # get ebay data - save as we go
     pf['name_str'] = pf['name'].str.split('(', n=1, expand=True)[0].str.strip()
@@ -125,23 +126,33 @@ def update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts=True):
 
     driver = get_chrome_driver(headless=False, use_local=True, max_window=True)
     num_len = len(pf)
+    pf_ebay = pf.copy()
+
     ebay_lsts = pd.read_pickle(pf_ebay_lsts_loc) if os.path.isfile(pf_ebay_lsts_loc) else {}
-    for ix, row in pf.iterrows():
-        if pd.notnull(pf_ebay.loc[ix, 'price_mkt']):
-            continue
+    for ix, row in pf.iterrows(): # 2:14 - 2:33 = 19mins
 
         # ebay data
         sch_phrase = row['sch_phrase']
         print(f" -> {ix}/{num_len} - {sch_phrase}")
-
         sch_phrase_id = f"{sch_phrase}_{item_loc}"
-        if (sch_phrase_id not in ebay_lsts.keys()) | update_lsts:
+
+        # update previous check
+        update_cache = False
+        if sch_phrase_id in ebay_lsts.keys():
+            update_dt = ebay_lsts[sch_phrase_id]['update_dt'].iloc[0]
+            if update_dt < today:
+                update_cache = True
+
+        if (sch_phrase_id not in ebay_lsts.keys()) | update_lsts_only | update_cache:
             dfls = get_ebayau_listing_data(sch_phrase, item_loc, ipg, driver)
+            dfls['update_dt'] = today
             ebay_lsts[sch_phrase_id] = dfls
             if len(dfls)==0:
                 pass
             save2pkl(ebay_lsts, pf_ebay_lsts_loc)
-            #continue
+
+            if update_lsts_only:
+                continue
         else:
             dfls = ebay_lsts[sch_phrase_id]
 
@@ -156,19 +167,20 @@ def update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts=True):
             mask = dfls_filtered_applied['sold_date']>=hist_sdate
             dfls_h = dfls_filtered_applied.loc[mask]
             pf_ebay.loc[ix, f"price_ebay_median_{hz_str}"] = dfls_h['price'].median()
+            pf_ebay.loc[ix, f"price_ebay_max_{hz_str}"] = dfls_h['price'].max()
 
-        # calc mkt price
-        cols = [f"price_ebay_median_{c}" for c in hist_lens.keys() if c!='max']
-        pf_ebay.loc[ix, 'price_mkt'] = pf_ebay.loc[ix, cols].max()
+        # calc some prices
+        median_cols = [f"price_ebay_median_{c}" for c in hist_lens.keys() if c!='max']
+        pf_ebay.loc[ix, 'price_ebay_median_high'] = pf_ebay.loc[ix, median_cols].max()
 
-        # save
-        pf_ebay.to_csv(pf_ebay_loc, index=False)
+    # save pf ebay
+    #pf_ebay.to_csv(pf_ebay_loc, index=False)
 
     # delete some cols
-    cols2keep = ['name','set','rarity','itm_number','graded','currency','price_collectr']
-    cols2keep = cols2keep + [f"price_ebay_median_{c}" for c in hist_lens.keys()] + ['price_mkt', 'sch_phrase']
+    cols2keep = ['name','set','rarity','itm_number','graded','currency',]
+    cols2keep = cols2keep + pcols
+    cols2keep = cols2keep + ['price_ebay_median_high','price_collectr', 'sch_phrase']
     pf_ebay = pf_ebay[cols2keep]
-    pcols = [f"price_ebay_median_{c}" for c in hist_lens.keys()] + ['price_mkt']
     pf_ebay[pcols] = pf_ebay[pcols].astype(float).round(2)
 
     # save
@@ -182,9 +194,11 @@ if __name__ == '__main__':
     _export_collectr_pf = True
     _update_pf_ebay = True
 
-    pf_loc = rf'{Path.cwd()}/saved_data/port_cltr.csv'
-    pf_ebay_loc = rf'{Path.cwd()}/saved_data/port_cltr_ebay.csv'
-    pf_ebay_lsts_loc = rf'{Path.cwd()}/saved_data/ebay_lsts.pkl'
+    # save locs
+    pf_loc = rf'{Path.cwd()}/saved_data/port_cltr.csv' # collectr port
+    pf_ebay_loc = rf'{Path.cwd()}/saved_data/port_cltr_ebay.csv' # collectr + ebay data
+    pf_ebay_lsts_loc = rf'{Path.cwd()}/saved_data/ebay_lsts.pkl' # store raw ebay listings
+
     # 1) download collectr portfolio
     if _export_collectr_pf:
         driver = get_chrome_driver(headless=False, use_local=True, max_window=True)
@@ -195,6 +209,6 @@ if __name__ == '__main__':
 
     # 2)
     if _update_pf_ebay:
-        update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts=False)
+        update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts_only=False)
         pass
 
