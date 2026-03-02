@@ -112,7 +112,8 @@ def update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts_only=True)
 
     # load pf
     pf = pd.read_csv(pf_loc)
-    pcols = [f"price_ebay_median_{c}" for c in hist_lens.keys()] + [f"price_ebay_max_{c}" for c in hist_lens.keys()]
+    #pcols = [f"price_ebay_median_{c}" for c in hist_lens.keys()] + [f"price_ebay_max_{c}" for c in hist_lens.keys()]
+    pcols = [f"p_ebay_q75_{c.replace(' ', '').replace('weeks','w').replace('week','w').strip()}" for c in hist_lens.keys()]
     if pcols[0] not in pf.columns:
         for c in pcols:
             pf[c] = None
@@ -166,12 +167,14 @@ def update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts_only=True)
             hist_sdate = today - pd.Timedelta(days=hist_lens[hz_str])
             mask = dfls_filtered_applied['sold_date']>=hist_sdate
             dfls_h = dfls_filtered_applied.loc[mask]
-            pf_ebay.loc[ix, f"price_ebay_median_{hz_str}"] = dfls_h['price'].median()
-            pf_ebay.loc[ix, f"price_ebay_max_{hz_str}"] = dfls_h['price'].max()
+            hz_str2 = hz_str.replace(' ', '').replace('weeks','w').replace('week','w').strip()
+            pf_ebay.loc[ix, f"p_ebay_q75_{hz_str2}"] = dfls_h['price'].quantile(0.75)
+            # pf_ebay.loc[ix, f"price_ebay_median_{hz_str}"] = dfls_h['price'].median()
+            # pf_ebay.loc[ix, f"price_ebay_max_{hz_str}"] = dfls_h['price'].max()
 
-        # calc some prices
-        median_cols = [f"price_ebay_median_{c}" for c in hist_lens.keys() if c!='max']
-        pf_ebay.loc[ix, 'price_ebay_median_high'] = pf_ebay.loc[ix, median_cols].max()
+        # # calc some prices
+        # median_cols = [f"price_ebay_median_{c}" for c in hist_lens.keys() if c!='max']
+        # pf_ebay.loc[ix, 'price_ebay_median_high'] = pf_ebay.loc[ix, median_cols].max()
 
     # save pf ebay
     #pf_ebay.to_csv(pf_ebay_loc, index=False)
@@ -179,7 +182,7 @@ def update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts_only=True)
     # delete some cols
     cols2keep = ['name','set','rarity','itm_number','graded','currency',]
     cols2keep = cols2keep + pcols
-    cols2keep = cols2keep + ['price_ebay_median_high','price_collectr', 'sch_phrase']
+    cols2keep = cols2keep + ['price_collectr', 'sch_phrase']
     pf_ebay = pf_ebay[cols2keep]
     pf_ebay[pcols] = pf_ebay[pcols].astype(float).round(2)
 
@@ -191,7 +194,7 @@ def update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts_only=True)
 
 
 if __name__ == '__main__':
-    _export_collectr_pf = True
+    _export_collectr_pf = False
     _update_pf_ebay = True
 
     # save locs
