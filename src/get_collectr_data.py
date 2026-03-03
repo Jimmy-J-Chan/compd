@@ -22,6 +22,7 @@ def parse_all_itms(all_itms):
         itmd['rarity'] = itm_meta[0].text.strip()
         itmd['itm_number'] = itm_meta[2].text.strip() if len(itm_meta)>1 else ''
         itmd['itm_p_str'] = itm_p[0].find('div').find('span').text
+        itmd['qty_str'] = itm_p[0].text.split('Qty:')[1].strip() if 'Qty' in itm_p[0].text else None
 
         # need to infer psa grade from img
         if len(l1div[0].find_all('img', recursive=False))==1:
@@ -43,6 +44,7 @@ def parse_all_itms(all_itms):
     # Extracts digits, decimals, and optional minus signs
     df['itm_p'] = df['itm_p_str'].str.extract(r'([-+]?[\d,]*\.?\d+)')
     df['itm_p'] = df['itm_p'].str.replace(',','').astype(float)
+    df['qty'] = df['qty_str'].astype(float)
     return df
 
 

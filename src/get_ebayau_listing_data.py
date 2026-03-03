@@ -36,8 +36,9 @@ def parse_lsts(lsts):
 
         attr_s = cts.find(class_="su-card-container__attributes__secondary")
         attrs_s = [t.text for t in attr_s.find_all('span')]
-        dfls.loc[ix, 'seller_name'] = attrs_s[0]
-        dfls.loc[ix, 'seller_rating'] = attrs_s[1]
+        if attrs_s is not None:
+            dfls.loc[ix, 'seller_name'] = attrs_s[0]
+            dfls.loc[ix, 'seller_rating'] = attrs_s[1]
 
         # images
         media = lst.find(class_="su-card-container__media")

@@ -102,8 +102,49 @@ def filter_ebay_data(sch_phrase, dfls):
     tmpdf['include_lst_filters'] = mask
     return tmpdf
 
+def filter_by_ball_rarity(sch_phrase, dfls):
+    # ball rarity
+    tmp_pattern = r'(poke|master)\s?(ball)\b'
+    mb_pattern = r'master\s?(ball)\b'
+    pb_pattern = r'poke\s?(ball)\b'
+    mb_search = re.search(mb_pattern, sch_phrase, re.IGNORECASE)
+    pb_search = re.search(pb_pattern, sch_phrase, re.IGNORECASE)
 
-def update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts_only=True):
+    # search for ball pattern
+    if bool(mb_search):
+        ball_pattern = mb_pattern
+    elif bool(pb_search):
+        ball_pattern = pb_pattern
+    else:
+        return dfls
+
+    # keep lsts with pattern
+    mask = dfls['title'].str.contains(ball_pattern, na=False, case=False)
+    dfls['include_lst_filters'] = mask & dfls['include_lst_filters']
+    return dfls
+
+def filter_by_promo_rarity(sch_phrase, dfls):
+
+    # promo_stamp rarity
+    tmp_pattern = r'(promo|stamp|stamped|svp)\b'
+    promo_search = re.search(tmp_pattern, sch_phrase, re.IGNORECASE)
+
+    # search for promo pattern
+    if bool(promo_search):
+        # keep promo only
+        mask = dfls['title'].str.contains(tmp_pattern, na=False, case=False)
+    else:
+        # remove promos
+        mask = ~dfls['title'].str.contains(tmp_pattern, na=False, case=False)
+
+    # update
+    # dfls['mask'] = mask
+    # dfls[['title','mask','include_lst_filters']]
+    dfls['include_lst_filters'] = mask & dfls['include_lst_filters']
+    return dfls
+
+
+def update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts_only=True, detect_rarity=False):
     # parameters
     today = pd.Timestamp.today().normalize()
     item_loc = 'Australia only'
@@ -119,7 +160,12 @@ def update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts_only=True)
             pf[c] = None
 
     # get ebay data - save as we go
-    pf['name_str'] = pf['name'].str.split('(', n=1, expand=True)[0].str.strip()
+    #pf['name_str'] = pf['name'].str.split('(', n=1, expand=True)[0].str.strip()
+    pf['name_str'] = pf['name'].str.replace('(','').str.replace(')','')
+    for w in ['pattern','cosmos holo', '[',']']:
+        pf['name_str'] = pf['name_str'].str.replace(w,'', case=False).str.strip()
+    mask = pf['rarity']=='Promo'
+    pf.loc[mask,'name_str'] = pf.loc[mask,'name_str'] + ' promo'
     pf['itm_number_str'] = pf['itm_number'].fillna('').str.strip()
     pf['graded_str'] = pf['graded'].fillna('').str.strip()
     pf['sch_phrase'] = pf['name_str'] + ' ' + pf['itm_number_str'] + ' ' + pf['graded_str']
@@ -159,6 +205,9 @@ def update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts_only=True)
 
         # filter listings
         dfls_filtered = filter_ebay_data(sch_phrase, dfls)
+        if detect_rarity:
+            dfls_filtered = filter_by_ball_rarity(sch_phrase, dfls_filtered)
+            dfls_filtered = filter_by_promo_rarity(sch_phrase, dfls_filtered)
         dfls_filtered_applied = dfls_filtered.loc[dfls_filtered['include_lst_filters']]
 
         # calc median prices
@@ -175,14 +224,12 @@ def update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts_only=True)
         # # calc some prices
         # median_cols = [f"price_ebay_median_{c}" for c in hist_lens.keys() if c!='max']
         # pf_ebay.loc[ix, 'price_ebay_median_high'] = pf_ebay.loc[ix, median_cols].max()
-
-    # save pf ebay
-    #pf_ebay.to_csv(pf_ebay_loc, index=False)
+        pf_ebay.loc[ix, 'p_ebay_q75_high'] = pf_ebay.loc[ix, pcols].max()
 
     # delete some cols
     cols2keep = ['name','set','rarity','itm_number','graded','currency',]
     cols2keep = cols2keep + pcols
-    cols2keep = cols2keep + ['price_collectr', 'sch_phrase']
+    cols2keep = cols2keep + ['p_ebay_q75_high','price_collectr', 'sch_phrase']
     pf_ebay = pf_ebay[cols2keep]
     pf_ebay[pcols] = pf_ebay[pcols].astype(float).round(2)
 
@@ -194,13 +241,23 @@ def update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts_only=True)
 
 
 if __name__ == '__main__':
-    _export_collectr_pf = False
+    _export_collectr_pf = True
     _update_pf_ebay = True
 
-    # save locs
-    pf_loc = rf'{Path.cwd()}/saved_data/port_cltr.csv' # collectr port
-    pf_ebay_loc = rf'{Path.cwd()}/saved_data/port_cltr_ebay.csv' # collectr + ebay data
-    pf_ebay_lsts_loc = rf'{Path.cwd()}/saved_data/ebay_lsts.pkl' # store raw ebay listings
+    # # save locs
+    # pf_loc = rf'{Path.cwd()}/saved_data/port_cltr.csv' # collectr port
+    # pf_ebay_loc = rf'{Path.cwd()}/saved_data/port_cltr_ebay.csv' # collectr + ebay data
+    # pf_ebay_lsts_loc = rf'{Path.cwd()}/saved_data/ebay_lsts.pkl' # store raw ebay listings
+
+    # # save locs - pris
+    # pf_loc = rf'{Path.cwd()}/saved_data/port_cltr_PRE.csv' # collectr port
+    # pf_ebay_loc = rf'{Path.cwd()}/saved_data/port_cltr_ebay_PRE.csv' # collectr + ebay data
+    # pf_ebay_lsts_loc = rf'{Path.cwd()}/saved_data/ebay_lsts_PRE.pkl' # store raw ebay listings
+
+    # save locs - bbwf
+    pf_loc = rf'{Path.cwd()}/saved_data/port_cltr_BBWF.csv' # collectr port
+    pf_ebay_loc = rf'{Path.cwd()}/saved_data/port_cltr_ebay_BBWF.csv' # collectr + ebay data
+    pf_ebay_lsts_loc = rf'{Path.cwd()}/saved_data/ebay_lsts_BBWF.pkl' # store raw ebay listings
 
     # 1) download collectr portfolio
     if _export_collectr_pf:
@@ -212,6 +269,6 @@ if __name__ == '__main__':
 
     # 2)
     if _update_pf_ebay:
-        update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts_only=False)
+        update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts_only=False, detect_rarity=True)
         pass
 
