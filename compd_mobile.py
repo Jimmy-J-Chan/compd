@@ -181,7 +181,7 @@ def set_tsearch():
             st.session_state['sb']['graded_name'] = pattern_found
             st.session_state['sb']['graded_company'] = re.search(pattern_graded_company, pattern_found, re.IGNORECASE).group().strip()
             st.session_state['sb']['graded_number'] = pattern_found.strip(st.session_state['sb']['graded_company']).strip()
-            tmp_sch_phrase = tmp_sch_phrase.strip(pattern_found).strip() # remove graded name
+            tmp_sch_phrase = tmp_sch_phrase.replace(pattern_found,'').strip() # remove graded name
 
         # find card number
         if is_float(tmp_sch_phrase[-1]):  # card num at end
@@ -195,9 +195,9 @@ def set_tsearch():
         st.session_state['sb']['card_num0'] = card_num # only first half
 
         # infer card name
-        card_name = tmp_sch_phrase.strip(card_num_str).strip()
+        card_name = tmp_sch_phrase.replace(card_num_str,'').strip()
         if 'graded_name' in st.session_state.keys():
-            card_name = card_name.strip(st.session_state['sb']['graded_name']).strip()
+            card_name = card_name.replace(st.session_state['sb']['graded_name'],'').strip()
         st.session_state['sb']['card_name'] = card_name
 
     ####################################################################################################################

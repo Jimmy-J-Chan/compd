@@ -39,9 +39,9 @@ def parse_search_phrase(sch_phrase):
     sch_phrase_meta['card_num0'] = card_num  # only first half
 
     # infer card name
-    card_name = tmp_sch_phrase.strip(card_num_str).strip()
+    card_name = tmp_sch_phrase.replace(card_num_str,'').strip()
     if 'graded_name' in sch_phrase_meta.keys():
-        card_name = card_name.strip(sch_phrase_meta['graded_name']).strip()
+        card_name = card_name.replace(sch_phrase_meta['graded_name'],'').strip()
     sch_phrase_meta['card_name'] = card_name
     return sch_phrase_meta
 
@@ -176,7 +176,7 @@ def update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts_only=True,
     pf_ebay = pf.copy()
 
     ebay_lsts = pd.read_pickle(pf_ebay_lsts_loc) if os.path.isfile(pf_ebay_lsts_loc) else {}
-    for ix, row in pf.iterrows(): # 2:14 - 2:33 = 19mins
+    for ix, row in pf[5:].iterrows(): # 2:14 - 2:33 = 19mins
 
         # ebay data
         sch_phrase = row['sch_phrase']
@@ -226,6 +226,9 @@ def update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts_only=True,
         # pf_ebay.loc[ix, 'price_ebay_median_high'] = pf_ebay.loc[ix, median_cols].max()
         pf_ebay.loc[ix, 'p_ebay_q75_high'] = pf_ebay.loc[ix, pcols].max()
 
+    if update_lsts_only:
+        return
+
     # delete some cols
     cols2keep = ['name','set','rarity','itm_number','graded','currency',]
     cols2keep = cols2keep + pcols
@@ -241,23 +244,23 @@ def update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts_only=True,
 
 
 if __name__ == '__main__':
-    _export_collectr_pf = True
+    _export_collectr_pf = False
     _update_pf_ebay = True
 
-    # # save locs
-    # pf_loc = rf'{Path.cwd()}/saved_data/port_cltr.csv' # collectr port
-    # pf_ebay_loc = rf'{Path.cwd()}/saved_data/port_cltr_ebay.csv' # collectr + ebay data
-    # pf_ebay_lsts_loc = rf'{Path.cwd()}/saved_data/ebay_lsts.pkl' # store raw ebay listings
+    # save locs
+    pf_loc = rf'{Path.cwd()}/saved_data/port_cltr.csv' # collectr port
+    pf_ebay_loc = rf'{Path.cwd()}/saved_data/port_cltr_ebay.csv' # collectr + ebay data
+    pf_ebay_lsts_loc = rf'{Path.cwd()}/saved_data/ebay_lsts.pkl' # store raw ebay listings
 
     # # save locs - pris
     # pf_loc = rf'{Path.cwd()}/saved_data/port_cltr_PRE.csv' # collectr port
     # pf_ebay_loc = rf'{Path.cwd()}/saved_data/port_cltr_ebay_PRE.csv' # collectr + ebay data
     # pf_ebay_lsts_loc = rf'{Path.cwd()}/saved_data/ebay_lsts_PRE.pkl' # store raw ebay listings
 
-    # save locs - bbwf
-    pf_loc = rf'{Path.cwd()}/saved_data/port_cltr_BBWF.csv' # collectr port
-    pf_ebay_loc = rf'{Path.cwd()}/saved_data/port_cltr_ebay_BBWF.csv' # collectr + ebay data
-    pf_ebay_lsts_loc = rf'{Path.cwd()}/saved_data/ebay_lsts_BBWF.pkl' # store raw ebay listings
+    # # save locs - bbwf
+    # pf_loc = rf'{Path.cwd()}/saved_data/port_cltr_BBWF.csv' # collectr port
+    # pf_ebay_loc = rf'{Path.cwd()}/saved_data/port_cltr_ebay_BBWF.csv' # collectr + ebay data
+    # pf_ebay_lsts_loc = rf'{Path.cwd()}/saved_data/ebay_lsts_BBWF.pkl' # store raw ebay listings
 
     # 1) download collectr portfolio
     if _export_collectr_pf:
@@ -267,8 +270,8 @@ if __name__ == '__main__':
         driver.close()
         pass
 
-    # 2)
+    # 2) 9:54 -
     if _update_pf_ebay:
-        update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts_only=False, detect_rarity=True)
+        update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts_only=False, detect_rarity=False)
         pass
 
