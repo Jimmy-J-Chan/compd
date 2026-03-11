@@ -264,10 +264,10 @@ if __name__ == '__main__':
     # pf_ebay_loc = rf'{Path.cwd()}/saved_data/port_cltr_ebay_PRE.csv' # collectr + ebay data
     # pf_ebay_lsts_loc = rf'{Path.cwd()}/saved_data/ebay_lsts_PRE.pkl' # store raw ebay listings
 
-    # save locs - bbwf
-    pf_loc = rf'{Path.cwd()}/saved_data/port_cltr_BBWF.csv' # collectr port
-    pf_ebay_loc = rf'{Path.cwd()}/saved_data/port_cltr_ebay_BBWF.csv' # collectr + ebay data
-    pf_ebay_lsts_loc = rf'{Path.cwd()}/saved_data/ebay_lsts_BBWF.pkl' # store raw ebay listings
+    # # save locs - bbwf
+    # pf_loc = rf'{Path.cwd()}/saved_data/port_cltr_BBWF.csv' # collectr port
+    # pf_ebay_loc = rf'{Path.cwd()}/saved_data/port_cltr_ebay_BBWF.csv' # collectr + ebay data
+    # pf_ebay_lsts_loc = rf'{Path.cwd()}/saved_data/ebay_lsts_BBWF.pkl' # store raw ebay listings
 
     # 1) download collectr portfolio - 8:29 -
     if _export_collectr_pf:

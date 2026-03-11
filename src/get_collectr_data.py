@@ -59,14 +59,19 @@ def get_collectr_data(sch_phrase, _driver):
     driver.get(url)
 
     # Wait a few seconds for JavaScript to load the price data
-    time.sleep(2)
+    time.sleep(1)
 
-    # check currency
-    wait = WebDriverWait(driver, 2)
-    xpath = "(//button[contains(., 'USD') or contains(., 'AUD')])[2]"
-    ccy_button = wait.until(EC.element_to_be_clickable((By.XPATH, xpath)))
-    if ccy_button.text != 'USD':
+    # check currency is in USD
+    from src.export_collectr_port import get_current_ccy
+    ccy_button = get_current_ccy(driver)
+    if ccy_button != 'USD':
         return {'error': 'USD not selected'}
+
+    # wait = WebDriverWait(driver, 2)
+    # xpath = "(//button[contains(., 'USD') or contains(., 'AUD')])[2]"
+    # ccy_button = wait.until(EC.element_to_be_clickable((By.XPATH, xpath)))
+    # if ccy_button.text != 'USD':
+    #     return {'error': 'USD not selected'}
 
     # wait = WebDriverWait(driver, 2)
     # try:
@@ -97,11 +102,14 @@ def get_collectr_data(sch_phrase, _driver):
     soup = BeautifulSoup(driver.page_source, 'html.parser')
     all_itms = [c for c in soup.find_all(class_='h-full list-none')]
     if len(all_itms)==0:
+        all_itms = [c for c in soup.find_all(class_='pb-5 h-full list-none')]
+
+    if len(all_itms)==0:
         return {'error': 'no data'}
     else:
         all_itms = all_itms[:1]
         df_all_itms = parse_all_itms(all_itms)
-        df_all_itms['ccy'] = ccy_button.text
+        df_all_itms['ccy'] = ccy_button
 
         # return first itm
         cltr_d = df_all_itms.loc[0].to_dict()
@@ -110,8 +118,9 @@ def get_collectr_data(sch_phrase, _driver):
 
 
 if __name__ == '__main__':
-    driver = get_chrome_driver(headless=True, use_local=True, max_window=True)
+    driver = get_chrome_driver(headless=False, use_local=True, max_window=True)
     sch_phrase = 'gengar 5'
     sch_phrase = 'destined rivals booster bundle'
+    sch_phrase = 'mew ex 232'
     cltr_d = get_collectr_data(sch_phrase, driver)
     pass
