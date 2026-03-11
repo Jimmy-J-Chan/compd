@@ -162,10 +162,11 @@ def update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts_only=True,
     # get ebay data - save as we go
     #pf['name_str'] = pf['name'].str.split('(', n=1, expand=True)[0].str.strip()
     pf['name_str'] = pf['name'].str.replace('(','').str.replace(')','')
-    for w in ['pattern','cosmos holo', '[',']']:
+    for w in ['pattern','cosmos holo', '[',']','Alternate Full Art','Full Art','Secret']:
         pf['name_str'] = pf['name_str'].str.replace(w,'', case=False).str.strip()
-    mask = pf['rarity']=='Promo'
-    pf.loc[mask,'name_str'] = pf.loc[mask,'name_str'] + ' promo'
+    if detect_rarity:
+        mask = pf['rarity']=='Promo'
+        pf.loc[mask,'name_str'] = pf.loc[mask,'name_str'] + ' promo'
     pf['itm_number_str'] = pf['itm_number'].fillna('').str.strip()
     pf['graded_str'] = pf['graded'].fillna('').str.strip()
     pf['sch_phrase'] = pf['name_str'] + ' ' + pf['itm_number_str'] + ' ' + pf['graded_str']
@@ -176,7 +177,7 @@ def update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts_only=True,
     pf_ebay = pf.copy()
 
     ebay_lsts = pd.read_pickle(pf_ebay_lsts_loc) if os.path.isfile(pf_ebay_lsts_loc) else {}
-    for ix, row in pf[5:].iterrows(): # 2:14 - 2:33 = 19mins
+    for ix, row in pf[:].iterrows(): # 2:14 - 2:33 = 19mins
 
         # ebay data
         sch_phrase = row['sch_phrase']
@@ -230,11 +231,17 @@ def update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts_only=True,
         return
 
     # delete some cols
-    cols2keep = ['name','set','rarity','itm_number','graded','currency',]
+    cols2keep = ['name','set','rarity','itm_number','graded','currency','qty']
     cols2keep = cols2keep + pcols
     cols2keep = cols2keep + ['p_ebay_q75_high','price_collectr', 'sch_phrase']
     pf_ebay = pf_ebay[cols2keep]
     pf_ebay[pcols] = pf_ebay[pcols].astype(float).round(2)
+
+    # pf totals
+    mask = pf_ebay['p_ebay_q75_high'].isnull()
+    pf_ebay.loc[mask, 'p_ebay_q75_high'] = pf_ebay.loc[mask, 'price_collectr']
+    pf_ebay['pf_q75_total'] = (pf_ebay['qty'] * pf_ebay['p_ebay_q75_high']).sum().round(2)
+    pf_ebay['pf_cltr_total'] = (pf_ebay['qty'] * pf_ebay['price_collectr']).sum().round(2)
 
     # save
     pf_ebay.to_csv(pf_ebay_loc, index=False)
@@ -244,7 +251,7 @@ def update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts_only=True,
 
 
 if __name__ == '__main__':
-    _export_collectr_pf = False
+    _export_collectr_pf = True
     _update_pf_ebay = True
 
     # save locs
@@ -257,12 +264,12 @@ if __name__ == '__main__':
     # pf_ebay_loc = rf'{Path.cwd()}/saved_data/port_cltr_ebay_PRE.csv' # collectr + ebay data
     # pf_ebay_lsts_loc = rf'{Path.cwd()}/saved_data/ebay_lsts_PRE.pkl' # store raw ebay listings
 
-    # # save locs - bbwf
-    # pf_loc = rf'{Path.cwd()}/saved_data/port_cltr_BBWF.csv' # collectr port
-    # pf_ebay_loc = rf'{Path.cwd()}/saved_data/port_cltr_ebay_BBWF.csv' # collectr + ebay data
-    # pf_ebay_lsts_loc = rf'{Path.cwd()}/saved_data/ebay_lsts_BBWF.pkl' # store raw ebay listings
+    # save locs - bbwf
+    pf_loc = rf'{Path.cwd()}/saved_data/port_cltr_BBWF.csv' # collectr port
+    pf_ebay_loc = rf'{Path.cwd()}/saved_data/port_cltr_ebay_BBWF.csv' # collectr + ebay data
+    pf_ebay_lsts_loc = rf'{Path.cwd()}/saved_data/ebay_lsts_BBWF.pkl' # store raw ebay listings
 
-    # 1) download collectr portfolio
+    # 1) download collectr portfolio - 8:29 -
     if _export_collectr_pf:
         driver = get_chrome_driver(headless=False, use_local=True, max_window=True)
         port_url = r'https://app.getcollectr.com/showcase/profile/24ba5413-66b8-4eb4-a5c3-fb93cd6480e0'
@@ -270,8 +277,8 @@ if __name__ == '__main__':
         driver.close()
         pass
 
-    # 2) 9:54 -
+    # 2)
     if _update_pf_ebay:
-        update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts_only=False, detect_rarity=False)
+        update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts_only=False, detect_rarity=True)
         pass
 

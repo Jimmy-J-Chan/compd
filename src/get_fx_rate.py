@@ -2,8 +2,11 @@ import yfinance as yf
 
 
 def get_audusd_rate():
-    data = yf.download('AUDUSD=X', period="1d")
-    audusd = data['Close'].iloc[-1,0]
+    try:
+        data = yf.download('AUDUSD=X', period="1d")
+        audusd = data['Close'].iloc[-1,0]
+    except:
+        audusd = 0.7
     return audusd
 
 
