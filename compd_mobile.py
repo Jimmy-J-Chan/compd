@@ -250,8 +250,7 @@ def set_tsearch():
             if 'collectr' not in st.session_state['itms'][itm_id].keys():
                 cltr_data = get_collectr_data(sch_phrase, driver)
                 st.session_state['itms'][itm_id]['collectr'] = cltr_data
-                st.write(st.session_state['itms'][itm_id]['collectr'])
-                st.write(st.session_state['itms'])
+
                 # convert usd price to aud
                 if 'itm_p' in cltr_data.keys():
                     audusd = st.session_state['audusd']
