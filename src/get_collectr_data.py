@@ -118,7 +118,7 @@ def get_collectr_data(sch_phrase, _driver):
 
 
 if __name__ == '__main__':
-    driver = get_chrome_driver(headless=False, use_local=True, max_window=True)
+    driver = get_chrome_driver(headless=True, use_local=True, max_window=True)
     sch_phrase = 'gengar 5'
     sch_phrase = 'destined rivals booster bundle'
     sch_phrase = 'mew ex 232'
