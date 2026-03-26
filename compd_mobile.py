@@ -223,8 +223,17 @@ def set_tsearch():
         item_loc = st.session_state['sb']['item_loc']
         itm_id = f"{sch_phrase}_{loc_map[item_loc]}"
 
+        # check for ipg change
+        _refresh_data = False
+        if itm_id in st.session_state['itms'].keys():
+            itm_ipg = st.session_state['itms'][itm_id]['ipg']
+            param_ipg = st.session_state['sb']['ipg']
+            if itm_ipg != param_ipg:
+                _refresh_data = True
+
         driver = st.session_state.chrome_driver
-        if itm_id not in st.session_state['itms'].keys():
+        if (itm_id not in st.session_state['itms'].keys()) | _refresh_data:
+            # ebay listing data
             st.session_state['itms'][itm_id] = {}
             ipg = st.session_state['sb']['ipg']
             dfls = get_ebayau_listing_data_st(sch_phrase, item_loc, ipg, driver)
@@ -233,6 +242,7 @@ def set_tsearch():
             st.session_state['itms'][itm_id]['dfls'] = dfls.copy()
             st.session_state['itms'][itm_id]['sch_phrase'] = sch_phrase
             st.session_state['itms'][itm_id]['item_loc'] = item_loc
+            st.session_state['itms'][itm_id]['ipg'] = ipg
         else:
             dfls = st.session_state['itms'][itm_id]['dfls'].copy()
 
@@ -585,7 +595,6 @@ def compd_mobile():
     set_tsearch()
     set_tport()
     set_ttrade()
-
     pass
 
 

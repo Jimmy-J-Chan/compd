@@ -108,7 +108,7 @@ def get_lst_imgs(url, _driver):
 def get_ebayau_listing_data(sch_phrase, item_loc, ipg, _driver):
     if len(sch_phrase)==0:
         return pd.DataFrame()
-    if ipg not in [60,120,180]:
+    if ipg not in [60,120,180,240]:
         return pd.DataFrame()
     driver = _driver
 
@@ -121,6 +121,8 @@ def get_ebayau_listing_data(sch_phrase, item_loc, ipg, _driver):
     param_ipp = f'&_ipg={int(ipg)}' # items per page
     url = f"{base_url}{enc_sch_phrase}{param_sold}{param_item_loc}{param_sort}{param_ipp}"
     #url = 'https://www.ebay.com.au/sch/i.html?_nkw=giratina+v+186%2F196&LH_Sold=1&LH_Complete=1&LH_PrefLoc=1&_sop=13&_ipg=60'
+    # &_pgn=7
+    # &_ipg=240 max
 
     #driver = get_chrome_driver()
     driver.get(url)
@@ -160,13 +162,20 @@ if __name__ == '__main__':
     # sch_phrase = 'giratina v 186/196'
     sch_phrase = 'mew ex 232'
     #sch_phrase = 'aerodactyl v 180'
-    item_loc = 'Australia only'
+    item_loc = 'Australia only' #'Worldwide'
     ipg = 60
     dfls = get_ebayau_listing_data(sch_phrase, item_loc, ipg, driver)
 
-    # regex
-    dfls['mask_grade'] = (dfls['title'].str.contains('', na=False, case=False))
-    dfls[['mask_grade','title']]
+    # item_loc = 'Australia only' #'Worldwide'
+    # for ipg in [60,240]:
+    #     s = time.time()
+    #     dfls = get_ebayau_listing_data(sch_phrase, item_loc, ipg, driver)
+    #     d = time.time() - s
+    #     print(d)
+
+    # # regex
+    # dfls['mask_grade'] = (dfls['title'].str.contains('', na=False, case=False))
+    # dfls[['mask_grade','title']]
 
     # driver = get_chrome_driver(headless=False)
     # url = r'https://www.ebay.com.au/itm/187777556541?_skw=giratina+v+186%2F196&itmmeta=01KEEB37XCG43486XHR5GXVRHF&hash=item2bb86a203d:g:vG8AAeSwdVZpJjg1&itmprp=enc%3AAQAKAAAA8FkggFvd1GGDu0w3yXCmi1cGWJgSJWCKg7JEo77W2u9HcaUTer3y0L%2FdJDGnB197K8fDHhxzIIziwxB7z0g32qlCu4rEhN%2FzH7ad4ijZMQ%2F6PPh2tAqpHMxKZ4Ftgp%2FKh%2FR6ikYtMmR1%2FTE5w5MpSbtMNCbZqnGDFfO7Mj94cMqPlxgP0j7ordIyglZVHexwZVTvA5VL2DpFhMnuTDp14lJpOs9TblhGmyWPVGgqIA0jMhoLxjxInTX0wh24X1CXoZCqIJAS%2FBuyfXStD9tNI69m%2FCENHVGURERpouPsXW34NeRAeU1y0bzSgSXIwd6unQ%3D%3D%7Ctkp%3ABk9SR_T-jMvzZg'

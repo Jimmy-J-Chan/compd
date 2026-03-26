@@ -104,7 +104,7 @@ def set_sidebar_elements():
     st.session_state['sb']['history_len'] = st.sidebar.radio("History",
                                                           ['1 week', '2 weeks','3 weeks','4 weeks',
                                                            '3 months','6 months'], index=3)
-
+    st.session_state['sb']['ipg'] = st.sidebar.radio("Listings Per Page",[60, 240], index=0)
     st.sidebar.markdown('<hr style="margin: 0px; border: 1px solid #ddd;">', unsafe_allow_html=True)
 
     # widgets
@@ -120,6 +120,11 @@ def set_sidebar_elements():
     st.session_state['sb']['rm_outliers'] = st.sidebar.toggle("Remove Outliers", value=False)
     st.session_state['sb']['mtch_card_num'] = st.sidebar.toggle("Match Card Num", value=True)
     st.session_state['sb']['mtch_srch_phrase'] = st.sidebar.toggle("Match Search Phrase", value=False)
+    st.sidebar.markdown('<hr style="margin: 0px; border: 1px solid #ddd;">', unsafe_allow_html=True)
+
+    # remove keywords
+    st.sidebar.write('__Remove keywords__:')
+    st.session_state['sb']['rm_kws'] = st.sidebar.text_input('', label_visibility='collapsed', placeholder='Enter keywords')
 
     # save
     st.sidebar.markdown('<hr style="margin: 0px; border: 1px solid #ddd;">', unsafe_allow_html=True)
@@ -134,7 +139,11 @@ def set_sidebar_elements():
     st.session_state['sb']['history_len_days'] = hist2days[st.session_state['sb']['history_len']]
     st.session_state['sb']['today'] = pd.Timestamp.today().normalize()
     st.session_state['sb']['hist_sdate'] = st.session_state['sb']['today'] - pd.Timedelta(days=st.session_state['sb']['history_len_days'])
-    st.session_state['sb']['ipg'] = 60 if st.session_state['sb']['item_loc']=='Australia only' else 120
+    #st.session_state['sb']['ipg'] = 60 if st.session_state['sb']['item_loc']=='Australia only' else 120
+    #st.session_state['sb']['ipg'] = 240
+
+    # get page 2 listings
+    #st.session_state['sb']['get_more_data'] = False
 
 def set_tabs():
     tsearch, tport, ttrade = st.tabs(["Search", "Portfolio", "Trade"])
