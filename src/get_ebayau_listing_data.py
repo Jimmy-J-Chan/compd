@@ -34,11 +34,14 @@ def parse_lsts(lsts):
         from_ctry_strs = [c for c in attrs_p if c.startswith('from ')]
         dfls.loc[ix, 'from_ctry_str'] = from_ctry_strs[0] if len(from_ctry_strs)>0 else ''
 
-        attr_s = cts.find(class_="su-card-container__attributes__secondary")
-        if attr_s is not None:
-            attrs_s = [t.text for t in attr_s.find_all('span')]
-            dfls.loc[ix, 'seller_name'] = attrs_s[0]
-            dfls.loc[ix, 'seller_rating'] = attrs_s[1]
+        try:
+            attr_s = cts.find(class_="su-card-container__attributes__secondary")
+            if attr_s is not None:
+                attrs_s = [t.text for t in attr_s.find_all('span')]
+                dfls.loc[ix, 'seller_name'] = attrs_s[0]
+                dfls.loc[ix, 'seller_rating'] = attrs_s[1]
+        except:
+            pass
 
         # images
         media = lst.find(class_="su-card-container__media")
