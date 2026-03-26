@@ -47,27 +47,26 @@ def set_tsearch():
                      'price_range_str': f"Price range: **\${_dfls['price'].min()} - \${_dfls['price'].max()}**",
                      #'last_sold_str': f"Last Sold: {}",
                      'mean_str': f"Mean: **${_dfls['price'].mean():.2f}**",
-                     'median_str': f"Median: **${_dfls['price'].median():.2f}**",
+                     #'median_str': f"Median: **${_dfls['price'].median():.2f}**",
                      'dr_start': dfls['sold_date'].min(),
                      'dr_end': dfls['sold_date'].max(),
                      'num_listings': num_lsts,
                      'price_min': _dfls['price'].min(),
                      'price_max': _dfls['price'].max(),
                      'mean': _dfls['price'].mean(),
-                     'median': _dfls['price'].median(),
-                     'q75': _dfls['price'].quantile(0.75),
-                     'q75_str': f"Quantile (75%): **${_dfls['price'].quantile(0.75):.2f}**",
-                     }
+                     #'median': _dfls['price'].median(),
+                     'q25': _dfls['price'].quantile(0.25),
+                     'q50': _dfls['price'].quantile(0.5),
+                     'q75': _dfls['price'].quantile(0.75),}
+            stats['q_str'] = f"Quantiles (25%/50%/75%): **\${stats['q25']:.2f} / \${stats['q50']:.2f} / \${stats['q75']:.2f}**"
 
             contr_stats = st.session_state.contr_stats
             contr_stats.write(stats['date_range_str'])
             contr_stats.write(stats['listings_str'])
             contr_stats.write(stats['price_range_str'])
             contr_stats.write(stats['mean_str'])
-            contr_stats.write(stats['median_str'])
-
-            # print quantiles
-            contr_stats.write(stats['q75_str'])
+            #contr_stats.write(stats['median_str'])
+            contr_stats.write(stats['q_str']) # print quantiles
 
             if st.session_state['sb']['get_collectr_p']:
                 cltr_d = st.session_state['itms'][itm_id]['collectr']
@@ -84,11 +83,11 @@ def set_tsearch():
                                                   vertical_alignment="top")
             write_style_str(parent_obj=contr_stats_p, str_out='Price: ')
             price_input = contr_stats_p.text_input(label='', label_visibility='collapsed',
-                                                   placeholder=f"{stats['median']:.2f}",
+                                                   placeholder=f"{stats['q50']:.2f}",
                                                    key="price_input", width=100)
             # set default value
             if len(price_input)==0:
-                price_input = stats['median']
+                price_input = stats['q50']
 
             try:
                 price_input = float(price_input)
