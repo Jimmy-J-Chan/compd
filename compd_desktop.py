@@ -85,7 +85,7 @@ def load_saved_data():
 
 
 def set_sidebar_elements():
-    vers_num = '2026-03-11 1338'
+    vers_num = '2026-03-26 1811'
     st.sidebar.image('./logo/compd_logo_white.png',)
     if st.sidebar.button('Clear Data'):
         reset_session_state_params_data()
@@ -123,8 +123,9 @@ def set_sidebar_elements():
     st.sidebar.markdown('<hr style="margin: 0px; border: 1px solid #ddd;">', unsafe_allow_html=True)
 
     # remove keywords
-    st.sidebar.write('__Remove keywords__:')
+    st.sidebar.write('__Remove Keywords__:')
     st.session_state['sb']['rm_kws'] = st.sidebar.text_input('', label_visibility='collapsed', placeholder='Enter keywords')
+    st.session_state['sb']['rm_kws'] = str(st.session_state['sb']['rm_kws'])
 
     # save
     st.sidebar.markdown('<hr style="margin: 0px; border: 1px solid #ddd;">', unsafe_allow_html=True)

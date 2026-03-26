@@ -166,6 +166,11 @@ if __name__ == '__main__':
     ipg = 60
     dfls = get_ebayau_listing_data(sch_phrase, item_loc, ipg, driver)
 
+    kws = [c.strip() for c in 'custom,cstm,mystery pack'.split(',')]
+
+
+    pass
+
     # item_loc = 'Australia only' #'Worldwide'
     # for ipg in [60,240]:
     #     s = time.time()

@@ -276,6 +276,7 @@ def set_tsearch():
         _parse_search_phrase()
 
         # prep the data to be displayed
+        dfls['title_stripped'] = dfls['title'].str.replace(r'[^\w\s]', '', regex=True) # remove punctuation first
         pattern_graded = st.session_state['sb']['pattern_graded']
         mask = dfls['sold_date'] >= st.session_state['sb']['hist_sdate']
         if st.session_state['sb']['rm_best_offer']:  # remove best offers
@@ -306,8 +307,6 @@ def set_tsearch():
             card_name_tokens = [c.strip() for c in card_name.split(' ')]
 
             # each token needs to be in the title
-            # remove punctuation first
-            dfls['title_stripped'] = dfls['title'].str.replace(r'[^\w\s]', '', regex=True)
             for token in card_name_tokens:
                 mask = mask & (dfls['title_stripped'].str.contains(token, na=False, case=False))
 
@@ -319,6 +318,11 @@ def set_tsearch():
             dfls['include_lst_filters'] = mask
             dfls = identify_lst_outliers(dfls)
             mask = mask & (~dfls['is_outlier'])
+        if len(st.session_state['sb']['rm_kws'])>0:
+            # remove keywords, comma seperated
+            kws = [c.strip() for c in st.session_state['sb']['rm_kws'].split(',')]
+            for kw in kws:
+                mask = mask & (~dfls['title_stripped'].str.contains(kw, na=False, case=False))
 
         # update mask filters
         dfls['include_lst_filters'] = mask
