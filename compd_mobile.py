@@ -58,7 +58,8 @@ def set_tsearch():
                      'q25': _dfls['price'].quantile(0.25),
                      'q50': _dfls['price'].quantile(0.5),
                      'q75': _dfls['price'].quantile(0.75),}
-            stats['q_str'] = f"Quantiles (25%/50%/75%): **\${stats['q25']:.2f} / \${stats['q50']:.2f} / \${stats['q75']:.2f}**"
+            #stats['q_str'] = f"Quantiles (25%/50%/75%): **\${stats['q25']:.2f} / \${stats['q50']:.2f} / \${stats['q75']:.2f}**"
+            stats['q_str'] = f"Quantiles (25/50/75): **\${stats['q25']:.0f} / \${stats['q50']:.0f} / \${stats['q75']:.0f}**"
 
             contr_stats = st.session_state.contr_stats
             contr_stats.write(stats['date_range_str'])
