@@ -5,7 +5,7 @@ import pandas as pd
 import altair as alt
 
 from conf.config import ss_g, hist2days, loc_map
-from src.common import set_scroll2top_button, set_chrome_driver, write_style_str, save2pkl, load_pkl
+from src.common import set_scroll2top_button, set_chrome_driver, write_style_str, save2pkl, load_pkl, is_float
 from src.get_ebayau_listing_data import get_ebayau_listing_data_st, get_lst_imgs
 
 # page settings
@@ -24,8 +24,13 @@ def set_session_state_groups():
 
 def reset_session_state_params_data():
     # only reset itms and pf, keep sb params and tabs
-    if 'sch_phrase_in' in st.session_state.keys():
-        st.session_state.sch_phrase_in = ''
+    for k in ['sch_phrase_in','rm_kws','prange_min','prange_max']:
+        if k in st.session_state.keys():
+            setattr(st.session_state, k, '')
+            #st.session_state.sch_phrase_in = ''
+        if k in st.session_state['sb'].keys():
+            st.session_state['sb'][k] = ''
+
     for g in ['itms', 'pf']:
         st.session_state[g] = {}
         if g == 'pf':
@@ -85,7 +90,7 @@ def load_saved_data():
 
 
 def set_sidebar_elements():
-    vers_num = '2026-03-26 1958'
+    vers_num = '2026-04-02 0857'
     st.sidebar.image('./logo/compd_logo_white.png',)
     if st.sidebar.button('Clear Data'):
         reset_session_state_params_data()
@@ -124,8 +129,21 @@ def set_sidebar_elements():
 
     # remove keywords
     st.sidebar.write('__Remove Keywords__:')
-    st.session_state['sb']['rm_kws'] = st.sidebar.text_input('', label_visibility='collapsed', placeholder='Enter keywords')
+    st.session_state['sb']['rm_kws'] = st.sidebar.text_input('', label_visibility='collapsed',
+                                                             placeholder='Enter keywords',key='rm_kws')
     st.session_state['sb']['rm_kws'] = str(st.session_state['sb']['rm_kws'])
+
+    # set price range - default min, max
+    st.sidebar.write('__Set Price Range__:')
+    contr_prange = st.sidebar.container(horizontal=True, gap='small', width='content', vertical_alignment="center")
+    st.session_state['sb']['prange_min'] = contr_prange.text_input(label='', label_visibility='collapsed',
+                                                                   placeholder='min', key="prange_min", width=75)
+    contr_prange.write(' to ')
+    st.session_state['sb']['prange_max'] = contr_prange.text_input(label='', label_visibility='collapsed',
+                                                                   placeholder='max', key="prange_max", width=75)
+    for t in ['prange_min','prange_max']:
+        if is_float(st.session_state['sb'][t]):
+            st.session_state['sb'][t] = float(st.session_state['sb'][t])
 
     # save
     st.sidebar.markdown('<hr style="margin: 0px; border: 1px solid #ddd;">', unsafe_allow_html=True)

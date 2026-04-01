@@ -279,6 +279,11 @@ def set_tsearch():
         dfls['title_stripped'] = dfls['title'].str.replace(r'[^\w\s]', '', regex=True) # remove punctuation first
         pattern_graded = st.session_state['sb']['pattern_graded']
         mask = dfls['sold_date'] >= st.session_state['sb']['hist_sdate']
+        st.write(st.session_state['sb'])
+        if is_float(st.session_state['sb']['prange_min']):
+            mask = mask & (dfls['price']>=st.session_state['sb']['prange_min'])
+        if is_float(st.session_state['sb']['prange_max']):
+            mask = mask & (dfls['price']<=st.session_state['sb']['prange_max'])
         if st.session_state['sb']['rm_best_offer']:  # remove best offers
             mask = mask & (dfls['auction_type']!='Best Offer')
         if st.session_state['sb']['show_sltd_lsts']: # show selected listings only
