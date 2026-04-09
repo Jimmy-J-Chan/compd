@@ -90,7 +90,7 @@ def load_saved_data():
 
 
 def set_sidebar_elements():
-    vers_num = '2026-04-02 1306'
+    vers_num = '2026-04-09 1807'
     st.sidebar.image('./logo/compd_logo_white.png',)
     if st.sidebar.button('Clear Data'):
         reset_session_state_params_data()
@@ -118,6 +118,7 @@ def set_sidebar_elements():
     st.session_state['sb']['show_pchart'] = st.sidebar.toggle("Show Price Chart", value=True)
     st.session_state['sb']['add_q75_pline'] = st.sidebar.toggle("Add q75 pline", value=False)
     st.session_state['sb']['get_collectr_p'] = st.sidebar.toggle("Show Collectr Price", value=False)
+    st.session_state['sb']['l5s'] = st.sidebar.toggle("Show Last 5 Sales", value=False)
 
     # filter options
     st.session_state['sb']['rm_best_offer'] = st.sidebar.toggle("Remove Best Offers", value=True)

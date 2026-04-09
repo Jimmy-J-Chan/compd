@@ -144,11 +144,11 @@ def filter_by_promo_rarity(sch_phrase, dfls):
     return dfls
 
 
-def update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts_only=True, detect_rarity=False):
+def update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts_only=True, detect_rarity=False, item_loc=None):
     # parameters
     today = pd.Timestamp.today().normalize()
-    item_loc = 'Australia only'
-    ipg = 60 if item_loc=='Australia only' else 120
+    #item_loc = 'Worldwide' #'Australia only'
+    ipg = 60 if item_loc=='Australia only' else 240
     hist_lens = {'1 week':7, '2 weeks':14,'3 weeks':21,'4 weeks':28}#, 'max':28*6}
 
     # load pf
@@ -162,11 +162,15 @@ def update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts_only=True,
     # get ebay data - save as we go
     #pf['name_str'] = pf['name'].str.split('(', n=1, expand=True)[0].str.strip()
     pf['name_str'] = pf['name'].str.replace('(','').str.replace(')','')
-    for w in ['pattern','cosmos holo', '[',']','Alternate Full Art','Full Art','Secret']:
+    for w in ['pattern','cosmos holo', '[',']','Alternate Full Art','Full Art','Secret','&']:
         pf['name_str'] = pf['name_str'].str.replace(w,'', case=False).str.strip()
     if detect_rarity:
         mask = pf['rarity']=='Promo'
         pf.loc[mask,'name_str'] = pf.loc[mask,'name_str'] + ' promo'
+    mask = pf['set'].str.contains('celebrations', na=False, case=False)
+    if mask.any():
+        pf.loc[mask,'name_str'] = pf.loc[mask,'name_str'] + ' celebrations'
+
     pf['itm_number_str'] = pf['itm_number'].fillna('').str.strip()
     pf['graded_str'] = pf['graded'].fillna('').str.strip()
     pf['sch_phrase'] = pf['name_str'] + ' ' + pf['itm_number_str'] + ' ' + pf['graded_str']
@@ -240,8 +244,8 @@ def update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts_only=True,
     # pf totals
     mask = pf_ebay['p_ebay_q75_high'].isnull()
     pf_ebay.loc[mask, 'p_ebay_q75_high'] = pf_ebay.loc[mask, 'price_collectr']
-    pf_ebay['pf_q75_total'] = (pf_ebay['qty'] * pf_ebay['p_ebay_q75_high']).sum().round(2)
-    pf_ebay['pf_cltr_total'] = (pf_ebay['qty'] * pf_ebay['price_collectr']).sum().round(2)
+    #pf_ebay['pf_q75_total'] = (pf_ebay['qty'] * pf_ebay['p_ebay_q75_high']).sum().round(2)
+    #pf_ebay['pf_cltr_total'] = (pf_ebay['qty'] * pf_ebay['price_collectr']).sum().round(2)
 
     # save
     pf_ebay.to_csv(pf_ebay_loc, index=False)
@@ -254,22 +258,33 @@ if __name__ == '__main__':
     _export_collectr_pf = True
     _update_pf_ebay = True
 
-    # save locs
-    pf_loc = rf'{Path.cwd()}/saved_data/port_cltr.csv' # collectr port
-    pf_ebay_loc = rf'{Path.cwd()}/saved_data/port_cltr_ebay.csv' # collectr + ebay data
-    pf_ebay_lsts_loc = rf'{Path.cwd()}/saved_data/ebay_lsts.pkl' # store raw ebay listings
+    # save locs - AU
+    item_loc = 'Australia only'
+    detect_rarity = False
+    pf_loc = rf'{Path.cwd()}/saved_data/port_cltr_s.csv' # collectr port
+    pf_ebay_loc = rf'{Path.cwd()}/saved_data/port_cltr_ebay_s.csv' # collectr + ebay data
+    pf_ebay_lsts_loc = rf'{Path.cwd()}/saved_data/ebay_lsts_s.pkl' # store raw ebay listings
+
+    # # save locs - Wrld
+    # item_loc = 'Worldwide'
+    # detect_rarity = False
+    # pf_loc = rf'{Path.cwd()}/saved_data/port_cltr_wrld.csv' # collectr port
+    # pf_ebay_loc = rf'{Path.cwd()}/saved_data/port_cltr_ebay_wrld.csv' # collectr + ebay data
+    # pf_ebay_lsts_loc = rf'{Path.cwd()}/saved_data/ebay_lsts_wrld.pkl' # store raw ebay listings
 
     # # save locs - pris
+    # detect_rarity = True
     # pf_loc = rf'{Path.cwd()}/saved_data/port_cltr_PRE.csv' # collectr port
     # pf_ebay_loc = rf'{Path.cwd()}/saved_data/port_cltr_ebay_PRE.csv' # collectr + ebay data
     # pf_ebay_lsts_loc = rf'{Path.cwd()}/saved_data/ebay_lsts_PRE.pkl' # store raw ebay listings
 
     # # save locs - bbwf
+    # detect_rarity = True
     # pf_loc = rf'{Path.cwd()}/saved_data/port_cltr_BBWF.csv' # collectr port
     # pf_ebay_loc = rf'{Path.cwd()}/saved_data/port_cltr_ebay_BBWF.csv' # collectr + ebay data
     # pf_ebay_lsts_loc = rf'{Path.cwd()}/saved_data/ebay_lsts_BBWF.pkl' # store raw ebay listings
 
-    # 1) download collectr portfolio - 8:29 -
+    # 1) download collectr portfolio
     if _export_collectr_pf:
         driver = get_chrome_driver(headless=False, use_local=True, max_window=True)
         port_url = r'https://app.getcollectr.com/showcase/profile/24ba5413-66b8-4eb4-a5c3-fb93cd6480e0'
@@ -279,6 +294,7 @@ if __name__ == '__main__':
 
     # 2)
     if _update_pf_ebay:
-        update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts_only=False, detect_rarity=True)
+        update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc,
+                       update_lsts_only=False, detect_rarity=detect_rarity, item_loc=item_loc)
         pass
 

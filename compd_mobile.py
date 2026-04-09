@@ -327,10 +327,13 @@ def set_tsearch():
             kws = [c.strip() for c in st.session_state['sb']['rm_kws'].split(',')]
             for kw in kws:
                 mask = mask & (~dfls['title_stripped'].str.contains(kw, na=False, case=False))
+        if st.session_state['sb']['l5s']:
+            # last 5 filtered sales
+            _df = dfls.copy().loc[mask]
+            mask = mask & (dfls.index.isin(_df.head(5).index))
 
         # update mask filters
         dfls['include_lst_filters'] = mask
-        #st.write(dfls)
 
         # update filter mask
         st.session_state['itms'][itm_id]['dfls']['include_lst_filters'] = dfls['include_lst_filters']
