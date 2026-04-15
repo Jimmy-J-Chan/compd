@@ -79,6 +79,10 @@ def parse_lsts(lsts):
         dfls.loc[mask, 'price'] = dfls.loc[mask,'price'].str.replace(r'[$, ]', '', regex=True).astype(float)
     dfls['price'] = dfls['price'].astype(float)
 
+    # edge case 1
+    mask = (dfls['price'].isnull()) & (dfls['price_str'].str.contains('AU $'))
+    dfls.loc[mask, 'price'] = dfls.loc[mask, 'price_str'].str.replace('AU $','').str.replace(',','').astype(float)
+
     # sort by sold date desc
     dfls = dfls.sort_values(by='sold_date', ascending=False)
 

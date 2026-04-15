@@ -90,7 +90,7 @@ def load_saved_data():
 
 
 def set_sidebar_elements():
-    vers_num = '2026-04-09 1807'
+    vers_num = '2026-04-15 1733'
     st.sidebar.image('./logo/compd_logo_white.png',)
     if st.sidebar.button('Clear Data'):
         reset_session_state_params_data()
@@ -108,8 +108,8 @@ def set_sidebar_elements():
                                                         ['Australia only', 'Worldwide'], index=0)
     st.session_state['sb']['history_len'] = st.sidebar.radio("History",
                                                           ['1 week', '2 weeks','3 weeks','4 weeks',
-                                                           '3 months','6 months'], index=3)
-    st.session_state['sb']['ipg'] = st.sidebar.radio("Listings Per Page",[60, 240], index=0)
+                                                           '3 months','6 months'], index=4)
+    st.session_state['sb']['ipg'] = st.sidebar.radio("Listings Per Page",[60, 240], index=1)
     st.sidebar.markdown('<hr style="margin: 0px; border: 1px solid #ddd;">', unsafe_allow_html=True)
 
     # widgets
