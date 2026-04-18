@@ -10,7 +10,7 @@ from src.common import encode_str, get_chrome_driver
 from src.get_collectr_data import parse_all_itms
 
 def check_pf_available(driver):
-    wait = WebDriverWait(driver, 3)
+    wait = WebDriverWait(driver, 10)
     try:
         # if pf made available
         pf_xpath = "//h1[text()='Portfolio:']"

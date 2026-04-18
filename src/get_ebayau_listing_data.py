@@ -12,12 +12,89 @@ def close_chrome_driver(driver):
     driver.quit()
     pass
 
-def parse_lsts(lsts):
-    cols = ['sol']
+def parse_lsts_solds(lsts):
+    #cols = ['sol']
     dfls = pd.DataFrame()
     for ix, lst in enumerate(lsts):
         # contents
         cts = lst.find(class_="su-card-container__content")
+
+        # header
+        hdr = cts.find(class_="su-card-container__header")
+        dfls.loc[ix, 'sold_date_str'] = hdr.find(class_="s-card__caption").text
+        title_contents = hdr.find(class_="s-card__link").find(class_="s-card__title").contents
+        dfls.loc[ix, 'title'] = title_contents[1].text if len(title_contents)>2 else title_contents[0].text
+        dfls.loc[ix,'sold_url'] = hdr.find(class_="s-card__link").attrs['href']
+
+        # attributes
+        attr_p = cts.find(class_="su-card-container__attributes__primary")
+        attrs_p = [t.text for t in attr_p.find_all('div')]
+        dfls.loc[ix, 'price_str'] = attrs_p[0]
+        dfls.loc[ix, 'auction_type_str'] = attrs_p[1]
+        from_ctry_strs = [c for c in attrs_p if c.startswith('from ')]
+        dfls.loc[ix, 'from_ctry_str'] = from_ctry_strs[0] if len(from_ctry_strs)>0 else ''
+
+        try:
+            attr_s = cts.find(class_="su-card-container__attributes__secondary")
+            if attr_s is not None:
+                attrs_s = [t.text for t in attr_s.find_all('span')]
+                dfls.loc[ix, 'seller_name'] = attrs_s[0]
+                dfls.loc[ix, 'seller_rating'] = attrs_s[1]
+        except:
+            pass
+
+        # images
+        media = lst.find(class_="su-card-container__media")
+        img_url_base = media.find(class_='s-card__link image-treatment').find('img').attrs['src']
+        dfls.loc[ix, 'img_url0'] = img_url_base.rsplit('/', 1)[0]
+
+        # img sizes
+        # 140w  - /s-l140.webp
+        # 500w  - /s-l500.webp
+        # 960w  - /s-l960.webp
+        # 1600w - /s-l1600.webp
+
+    # parse cols
+    dfls['auction_type'] = None
+    mask = dfls['auction_type_str'].isin(["or Best Offer","Buy It Now"])
+    dfls.loc[mask,'auction_type'] = 'Buy It Now'
+    mask = dfls['auction_type_str'].str.contains('bid|bids')
+    dfls.loc[mask,'auction_type'] = 'Auction'
+    mask = dfls['auction_type_str']=='Best Offer accepted'
+    dfls.loc[mask,'auction_type'] = 'Best Offer'
+
+    dfls['sold_date'] = pd.to_datetime(dfls['sold_date_str'].str.strip('Sold '), format='mixed')
+    dfls['price'] = None
+    dfls['num_p'] = dfls['price_str'].str.split('AU').str.len()-1
+
+    mask = dfls['auction_type_str'].isin(['or Best Offer','Buy It Now','Best Offer accepted'])
+    mask = mask | (dfls['auction_type_str'].str.contains('bid|bids'))
+    mask = mask != (dfls['price_str'].str.contains('to'))
+    mask = mask & (dfls['num_p']==1)
+    dfls.loc[mask, 'price'] = dfls.loc[mask, 'price_str'].str.replace('AU $','').str.replace(',','').astype(float)
+    # if price drops
+    mask = (dfls['num_p']>1) & (dfls['auction_type_str']=='Best Offer accepted')
+    if mask.sum()>0:
+        dfls.loc[mask,'price'] = dfls.loc[mask]['price_str'].str.split('AU', expand=True)[1]
+        dfls.loc[mask, 'price'] = dfls.loc[mask,'price'].str.replace(r'[$, ]', '', regex=True).astype(float)
+    dfls['price'] = dfls['price'].astype(float)
+
+    # edge case 1
+    mask = (dfls['price'].isnull()) & (dfls['price_str'].str.startswith('AU $')) & (dfls['num_p']==1)
+    dfls.loc[mask, 'price'] = dfls.loc[mask, 'price_str'].str.replace('AU $','').str.replace(',','').astype(float)
+
+    # sort by sold date desc
+    dfls = dfls.sort_values(by='sold_date', ascending=False)
+
+    # keep best matches at top?
+    return dfls
+
+def parse_lsts_lwst_list(lsts):
+    dfls = pd.DataFrame()
+    for ix, lst in enumerate(lsts):
+        # contents
+        cts = lst.find(class_="su-card-container__content")
+        cts = lst.find(class_="srp-results srp-list clearfix")
 
         # header
         hdr = cts.find(class_="su-card-container__header")
@@ -89,6 +166,28 @@ def parse_lsts(lsts):
     # keep best matches at top?
     return dfls
 
+
+def create_search_url(sch_phrase, item_loc, ipg, sch_solds=True):
+    # encode url
+    base_url = r'https://www.ebay.com.au/sch/i.html?'
+    enc_sch_phrase = encode_str(sch_phrase, r"_nkw")
+    param_sold = '&LH_Sold=1&LH_Complete=1' # sold/completed
+    param_item_loc = '&LH_PrefLoc=1' if item_loc=='Australia only' else '&LH_PrefLoc=2' #worldwide
+    param_ipp = f'&_ipg={int(ipg)}' # items per page
+    param_display = '&_dmd=1' # display view: 1=list, 2=grid
+
+    if sch_solds:
+        param_sort = '&_sop=13'  # sort: ended recently
+        url = f"{base_url}{enc_sch_phrase}{param_sold}{param_item_loc}{param_sort}{param_ipp}{param_display}"
+    else:
+        param_sort = '&_sop=15'  # sort: price + postage lowest first
+        url = f"{base_url}{enc_sch_phrase}{param_item_loc}{param_sort}{param_ipp}{param_display}"
+
+    #url = 'https://www.ebay.com.au/sch/i.html?_nkw=giratina+v+186%2F196&LH_Sold=1&LH_Complete=1&LH_PrefLoc=1&_sop=13&_ipg=60'
+    # &_pgn=7
+    # &_ipg=240 max
+    return url
+
 @st.cache_data(ttl='1hr',max_entries=15,show_spinner=False)
 def get_lst_imgs(url, _driver):
     # go to sold listing url
@@ -112,7 +211,7 @@ def get_lst_imgs(url, _driver):
         img_urls = []
     return img_urls
 
-def get_ebayau_listing_data(sch_phrase, item_loc, ipg, _driver):
+def get_ebayau_listing_data(sch_phrase, item_loc, ipg, _driver, sch_solds=True):
     if len(sch_phrase)==0:
         return pd.DataFrame()
     if ipg not in [60,120,180,240]:
@@ -120,16 +219,7 @@ def get_ebayau_listing_data(sch_phrase, item_loc, ipg, _driver):
     driver = _driver
 
     # encode url
-    base_url = r'https://www.ebay.com.au/sch/i.html?'
-    enc_sch_phrase = encode_str(sch_phrase, r"_nkw")
-    param_sold = '&LH_Sold=1&LH_Complete=1'
-    param_item_loc = '&LH_PrefLoc=1' if item_loc=='Australia only' else '&LH_PrefLoc=2' #worldwide
-    param_sort = '&_sop=13' # sort: ended recently
-    param_ipp = f'&_ipg={int(ipg)}' # items per page
-    url = f"{base_url}{enc_sch_phrase}{param_sold}{param_item_loc}{param_sort}{param_ipp}"
-    #url = 'https://www.ebay.com.au/sch/i.html?_nkw=giratina+v+186%2F196&LH_Sold=1&LH_Complete=1&LH_PrefLoc=1&_sop=13&_ipg=60'
-    # &_pgn=7
-    # &_ipg=240 max
+    url = create_search_url(sch_phrase, item_loc, ipg, sch_solds)
 
     #driver = get_chrome_driver()
     driver.get(url)
@@ -148,7 +238,10 @@ def get_ebayau_listing_data(sch_phrase, item_loc, ipg, _driver):
         return pd.DataFrame()
 
     # parse all listings into a df - include links to images
-    dfls = parse_lsts(lsts)
+    if sch_solds:
+        dfls = parse_lsts_solds(lsts)
+    else:
+        dfls = parse_lsts_lwst_list(lsts)
 
     # remove int sales listings if au only
     if item_loc in ['Australia only']:
@@ -156,38 +249,25 @@ def get_ebayau_listing_data(sch_phrase, item_loc, ipg, _driver):
         dfls = dfls.loc[mask]
     return dfls
 
-
 @st.cache_data(ttl='1hr',max_entries=15,show_spinner=True)
-def get_ebayau_listing_data_st(sch_phrase, item_loc, ipg, _driver):
-    return get_ebayau_listing_data(sch_phrase, item_loc, ipg, _driver)
+def get_ebayau_listing_data_st(sch_phrase, item_loc, ipg, _driver, sch_solds):
+    return get_ebayau_listing_data(sch_phrase, item_loc, ipg, _driver, sch_solds)
 
 
 
+def get_ebayau_lwst_lsted_data(sch_phrase, item_loc, ipg, _driver, sch_solds=False):
+    return get_ebayau_listing_data(sch_phrase, item_loc, ipg, _driver, sch_solds)
 
 if __name__ == '__main__':
     driver = get_chrome_driver(headless=False, use_local=True)
     # sch_phrase = 'giratina v 186/196'
     sch_phrase = 'mew ex 232'
     #sch_phrase = 'aerodactyl v 180'
+    sch_phrase = 'charizard 4 psa7'
     item_loc = 'Australia only' #'Worldwide'
-    ipg = 60
-    dfls = get_ebayau_listing_data(sch_phrase, item_loc, ipg, driver)
-
-    kws = [c.strip() for c in 'custom,cstm,mystery pack'.split(',')]
-
-
-    pass
-
-    # item_loc = 'Australia only' #'Worldwide'
-    # for ipg in [60,240]:
-    #     s = time.time()
-    #     dfls = get_ebayau_listing_data(sch_phrase, item_loc, ipg, driver)
-    #     d = time.time() - s
-    #     print(d)
-
-    # # regex
-    # dfls['mask_grade'] = (dfls['title'].str.contains('', na=False, case=False))
-    # dfls[['mask_grade','title']]
+    ipg = 240
+    #dfls = get_ebayau_lwst_lsted_data(sch_phrase, item_loc, ipg, driver, sch_solds=False) # lowest listed
+    dfls = get_ebayau_listing_data(sch_phrase, item_loc, ipg, driver, sch_solds=True) # solds
 
     # driver = get_chrome_driver(headless=False)
     # url = r'https://www.ebay.com.au/itm/187777556541?_skw=giratina+v+186%2F196&itmmeta=01KEEB37XCG43486XHR5GXVRHF&hash=item2bb86a203d:g:vG8AAeSwdVZpJjg1&itmprp=enc%3AAQAKAAAA8FkggFvd1GGDu0w3yXCmi1cGWJgSJWCKg7JEo77W2u9HcaUTer3y0L%2FdJDGnB197K8fDHhxzIIziwxB7z0g32qlCu4rEhN%2FzH7ad4ijZMQ%2F6PPh2tAqpHMxKZ4Ftgp%2FKh%2FR6ikYtMmR1%2FTE5w5MpSbtMNCbZqnGDFfO7Mj94cMqPlxgP0j7ordIyglZVHexwZVTvA5VL2DpFhMnuTDp14lJpOs9TblhGmyWPVGgqIA0jMhoLxjxInTX0wh24X1CXoZCqIJAS%2FBuyfXStD9tNI69m%2FCENHVGURERpouPsXW34NeRAeU1y0bzSgSXIwd6unQ%3D%3D%7Ctkp%3ABk9SR_T-jMvzZg'

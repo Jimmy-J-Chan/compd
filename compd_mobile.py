@@ -236,7 +236,7 @@ def set_tsearch():
             # ebay listing data
             st.session_state['itms'][itm_id] = {}
             ipg = st.session_state['sb']['ipg']
-            dfls = get_ebayau_listing_data_st(sch_phrase, item_loc, ipg, driver)
+            dfls = get_ebayau_listing_data_st(sch_phrase, item_loc, ipg, driver, sch_solds=True)
             dfls['include_lst'] = True # mask for btns
             dfls['include_lst_filters'] = False # mask for sidebar filters
             st.session_state['itms'][itm_id]['dfls'] = dfls.copy()
@@ -330,6 +330,7 @@ def set_tsearch():
         if st.session_state['sb']['l5s']:
             # last 5 filtered sales
             _df = dfls.copy().loc[mask]
+            _df = _df.loc[_df['include_lst']]
             mask = mask & (dfls.index.isin(_df.head(5).index))
 
         # update mask filters
