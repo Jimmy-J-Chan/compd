@@ -37,18 +37,24 @@ def get_chrome_driver(headless=True, use_local=False, max_window=False):
     # Set up Chrome options
     chrome_options = Options()
     if headless:
-        chrome_options.add_argument("--headless")  # Uncomment to run without a visible window
+        chrome_options.add_argument("--headless=new")  # Uncomment to run without a visible window
     #chrome_options.add_argument("--disable-blink-features=AutomationControlled")
     # iphone_ua = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Mobile/15E148 Safari/604.1"
+    # iphone_ua = "Mozilla/5.0 (Linux; Android 15; SM-S931B Build/AP3A.240905.015.A2; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/127.0.6533.103 Mobile Safari/537.36"
     # chrome_options.add_argument(f"user-agent={iphone_ua}")
 
-    # uas = ['Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36']
-    # ua = uas[0]
+    # ua_list = [
+    #     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+    #     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+    #     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+    # ]
+    # ua = ua_list[2]
     # chrome_options.add_argument(f"user-agent={ua}")
-    #chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-    chrome_options.add_argument("window-size=1280,800")
+
+    # chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+    #chrome_options.add_argument("window-size=1280,800")
     #chrome_options.add_argument("window-size=393,852")
-    chrome_options.add_argument("--disable-gpu")
+    #chrome_options.add_argument("--disable-gpu")
 
     if (st.context.url in ['http://localhost:8501']) | use_local:
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()),options=chrome_options)
@@ -61,7 +67,7 @@ def get_chrome_driver(headless=True, use_local=False, max_window=False):
 
 def set_chrome_driver():
     if 'chrome_driver' not in st.session_state.keys():
-        st.session_state.chrome_driver = get_chrome_driver(max_window=True, headless=False)
+        st.session_state.chrome_driver = get_chrome_driver(max_window=True)
 
 def write_style_str(parent_obj=None, str_out=None, color=None, font_size=None, font_w=None, strike_through=False,
                     hyperlink=None):

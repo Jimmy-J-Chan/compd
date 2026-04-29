@@ -221,11 +221,23 @@ def get_ebayau_listing_data(sch_phrase, item_loc, ipg, _driver, sch_solds=True):
     # encode url
     url = create_search_url(sch_phrase, item_loc, ipg, sch_solds)
 
-    #driver = get_chrome_driver()
+    # try and bypass - 1 refresh required
+    wait_time = 1
     driver.get(url)
-
-    # Wait a few seconds for JavaScript to load the price data
-    time.sleep(3)
+    time.sleep(wait_time)
+    driver.get(url)
+    time.sleep(wait_time)
+    # n_tries = 2
+    # ACCESS_DENIED_FLAG = True
+    # for n in range(n_tries):
+    #     if ACCESS_DENIED_FLAG:
+    #         driver.get(url)
+    #         time.sleep(2)
+    #         ACCESS_DENIED_FLAG = 'Access Denied' in driver.page_source
+    # if ACCESS_DENIED_FLAG and (n==n_tries-1):
+    #     # could not bypass
+    #     return pd.DataFrame()
+    ##
 
     # Get the page source and hand it over to BeautifulSoup
     try:
@@ -259,12 +271,12 @@ def get_ebayau_lwst_lsted_data(sch_phrase, item_loc, ipg, _driver, sch_solds=Fal
     return get_ebayau_listing_data(sch_phrase, item_loc, ipg, _driver, sch_solds)
 
 if __name__ == '__main__':
-    driver = get_chrome_driver(headless=True, use_local=True)
-    sch_phrase = 'giratina v 186/196'
-    # sch_phrase = 'mew ex 232'
+    driver = get_chrome_driver(headless=True, use_local=True, max_window=True)
+    #sch_phrase = 'giratina v 186/196'
+    sch_phrase = 'mew ex 232'
     # #sch_phrase = 'aerodactyl v 180'
     # sch_phrase = 'charizard 4 psa7'
-    item_loc = 'Australia only' #'Worldwide'
+    item_loc = 'Australia only' #'Worldwide' #
     ipg = 240
     #dfls = get_ebayau_lwst_lsted_data(sch_phrase, item_loc, ipg, driver, sch_solds=False) # lowest listed
     dfls = get_ebayau_listing_data(sch_phrase, item_loc, ipg, driver, sch_solds=True) # solds
