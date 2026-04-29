@@ -260,10 +260,10 @@ def get_ebayau_lwst_lsted_data(sch_phrase, item_loc, ipg, _driver, sch_solds=Fal
 
 if __name__ == '__main__':
     driver = get_chrome_driver(headless=False, use_local=True)
-    # sch_phrase = 'giratina v 186/196'
-    sch_phrase = 'mew ex 232'
-    #sch_phrase = 'aerodactyl v 180'
-    sch_phrase = 'charizard 4 psa7'
+    sch_phrase = 'giratina v 186/196'
+    # sch_phrase = 'mew ex 232'
+    # #sch_phrase = 'aerodactyl v 180'
+    # sch_phrase = 'charizard 4 psa7'
     item_loc = 'Australia only' #'Worldwide'
     ipg = 240
     #dfls = get_ebayau_lwst_lsted_data(sch_phrase, item_loc, ipg, driver, sch_solds=False) # lowest listed
