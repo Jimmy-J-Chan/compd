@@ -33,7 +33,7 @@ def set_scroll2top_button():
         unsafe_allow_html=True
     )
 
-def get_chrome_driver(headless=True, use_local=False, max_window=False, set_ua=False):
+def get_chrome_driver(headless=True, use_local=False, max_window=False):
     # Set up Chrome options
     chrome_options = Options()
     if headless:
@@ -41,8 +41,11 @@ def get_chrome_driver(headless=True, use_local=False, max_window=False, set_ua=F
     #chrome_options.add_argument("--disable-blink-features=AutomationControlled")
     # iphone_ua = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Mobile/15E148 Safari/604.1"
     # chrome_options.add_argument(f"user-agent={iphone_ua}")
-    if set_ua:
-        chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+
+    # uas = ['Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36']
+    # ua = uas[0]
+    # chrome_options.add_argument(f"user-agent={ua}")
+    #chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
     chrome_options.add_argument("window-size=1280,800")
     #chrome_options.add_argument("window-size=393,852")
     chrome_options.add_argument("--disable-gpu")
@@ -58,7 +61,7 @@ def get_chrome_driver(headless=True, use_local=False, max_window=False, set_ua=F
 
 def set_chrome_driver():
     if 'chrome_driver' not in st.session_state.keys():
-        st.session_state.chrome_driver = get_chrome_driver(max_window=True)
+        st.session_state.chrome_driver = get_chrome_driver(max_window=True, headless=False)
 
 def write_style_str(parent_obj=None, str_out=None, color=None, font_size=None, font_w=None, strike_through=False,
                     hyperlink=None):
