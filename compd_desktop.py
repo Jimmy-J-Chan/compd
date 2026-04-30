@@ -36,6 +36,9 @@ def reset_session_state_params_data():
         if g == 'pf':
             st.session_state.pf['itms'] = {}
 
+    if 'sch_phrase_ll' in st.session_state.keys():
+        st.session_state.sch_phrase_ll = ''
+
 def deselect_lstings():
     if ('itm_id_in' in st.session_state.keys()) & ('deselect_btn' in st.session_state.keys()):
         if st.session_state.deselect_btn:
@@ -90,7 +93,7 @@ def load_saved_data():
 
 
 def set_sidebar_elements():
-    vers_num = '2026-04-29 2127'
+    vers_num = '2026-05-01 0028'
     st.sidebar.image('./logo/compd_logo_white.png',)
     if st.sidebar.button('Clear Data'):
         reset_session_state_params_data()

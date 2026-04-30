@@ -23,10 +23,52 @@ st.set_page_config(page_title="Compd",
                    )
 
 
+def parse_search_phrase(sch_phrase):
+    tmp_sch_phrase = sch_phrase
+
+    # identify if graded card search
+    if 'graded_name' in st.session_state['sb'].keys():
+        del st.session_state['sb']['graded_name']
+        del st.session_state['sb']['graded_company']
+        del st.session_state['sb']['graded_number']
+    pattern_graded = st.session_state['sb']['pattern_graded']
+    pattern_graded_company = st.session_state['sb']['pattern_graded_company']
+    re_search = re.search(pattern_graded, tmp_sch_phrase, re.IGNORECASE)
+    if bool(re_search):
+        pattern_found = re_search.group()
+        st.session_state['sb']['graded_name'] = pattern_found
+        st.session_state['sb']['graded_company'] = re.search(pattern_graded_company, pattern_found,
+                                                             re.IGNORECASE).group().strip()
+        st.session_state['sb']['graded_number'] = pattern_found.strip(st.session_state['sb']['graded_company']).strip()
+        tmp_sch_phrase = tmp_sch_phrase.replace(pattern_found, '').strip()  # remove graded name
+
+    # find card number
+    if is_float(tmp_sch_phrase[-1]):  # card num at end
+        card_num_str = tmp_sch_phrase.rsplit(maxsplit=1)[1].strip()
+    elif is_float(tmp_sch_phrase[0]):  # card num at beginning
+        card_num_str = tmp_sch_phrase.split(maxsplit=1)[0].strip()
+    else:  # no card num provided
+        card_num_str = ''
+    card_num = card_num_str.split('/')[0].strip() if '/' in card_num_str else card_num_str
+    st.session_state['sb']['card_num'] = card_num_str  # full card number
+    st.session_state['sb']['card_num0'] = card_num  # only first half
+
+    # infer card name
+    card_name = tmp_sch_phrase.replace(card_num_str, '').strip()
+    if 'graded_name' in st.session_state.keys():
+        card_name = card_name.replace(st.session_state['sb']['graded_name'], '').strip()
+    st.session_state['sb']['card_name'] = card_name
+
+
 def populate_include_lst_filters(dfls, sch_solds=True):
     dfls['title_stripped'] = dfls['title'].str.replace(r'[^\w\s]', '', regex=True)  # remove punctuation first
     pattern_graded = st.session_state['sb']['pattern_graded']
-    mask = dfls['sold_date'] >= st.session_state['sb']['hist_sdate']
+
+    if sch_solds:
+        mask = dfls['sold_date'] >= st.session_state['sb']['hist_sdate']
+    else:
+        mask = dfls['title_stripped'].str.len()>0
+
     if is_float(st.session_state['sb']['prange_min']):
         mask = mask & (dfls['price'] >= st.session_state['sb']['prange_min'])
     if is_float(st.session_state['sb']['prange_max']):
@@ -225,43 +267,10 @@ def set_tsearch():
             write_style_str(parent_obj=contr_pchart,
                             str_out="Select more listings to generate price chart",
                             color="red", font_size="1em", font_w='bold')
-
-    def _parse_search_phrase():
-        tmp_sch_phrase = sch_phrase
-
-        # identify if graded card search
-        if 'graded_name' in st.session_state['sb'].keys():
-            del st.session_state['sb']['graded_name']
-            del st.session_state['sb']['graded_company']
-            del st.session_state['sb']['graded_number']
-        pattern_graded = st.session_state['sb']['pattern_graded']
-        pattern_graded_company = st.session_state['sb']['pattern_graded_company']
-        re_search = re.search(pattern_graded, tmp_sch_phrase, re.IGNORECASE)
-        if bool(re_search):
-            pattern_found = re_search.group()
-            st.session_state['sb']['graded_name'] = pattern_found
-            st.session_state['sb']['graded_company'] = re.search(pattern_graded_company, pattern_found, re.IGNORECASE).group().strip()
-            st.session_state['sb']['graded_number'] = pattern_found.strip(st.session_state['sb']['graded_company']).strip()
-            tmp_sch_phrase = tmp_sch_phrase.replace(pattern_found,'').strip() # remove graded name
-
-        # find card number
-        if is_float(tmp_sch_phrase[-1]):  # card num at end
-            card_num_str = tmp_sch_phrase.rsplit(maxsplit=1)[1].strip()
-        elif is_float(tmp_sch_phrase[0]):  # card num at beginning
-            card_num_str = tmp_sch_phrase.split(maxsplit=1)[0].strip()
-        else:  # no card num provided
-            card_num_str = ''
-        card_num = card_num_str.split('/')[0].strip() if '/' in card_num_str else card_num_str
-        st.session_state['sb']['card_num'] = card_num_str # full card number
-        st.session_state['sb']['card_num0'] = card_num # only first half
-
-        # infer card name
-        card_name = tmp_sch_phrase.replace(card_num_str,'').strip()
-        if 'graded_name' in st.session_state.keys():
-            card_name = card_name.replace(st.session_state['sb']['graded_name'],'').strip()
-        st.session_state['sb']['card_name'] = card_name
-
     ####################################################################################################################
+    # pattern to identify graded cards
+    st.session_state['sb']['pattern_graded'] = r'(psa|cgc|bgs|beckett|ace|tag|ark)\s?([1-9](\.5)?|10)\b'
+    st.session_state['sb']['pattern_graded_company'] = r'(psa|cgc|bgs|beckett|ace|tag|ark)\s?'
 
     with st.session_state['tabs']['search']:
         # search bar
@@ -328,12 +337,9 @@ def set_tsearch():
                     itm_p = st.session_state['itms'][itm_id]['collectr']['itm_p']
                     st.session_state['itms'][itm_id]['collectr']['itm_p'] = itm_p/audusd
 
-        # pattern to identify graded cards
-        st.session_state['sb']['pattern_graded'] = r'(psa|cgc|bgs|beckett|ace|tag|ark)\s?([1-9](\.5)?|10)\b'
-        st.session_state['sb']['pattern_graded_company'] = r'(psa|cgc|bgs|beckett|ace|tag|ark)\s?'
-
         # parse the search phrase
-        _parse_search_phrase()
+        #_parse_search_phrase()
+        parse_search_phrase(sch_phrase)
 
         # prep the data to be displayed - apply filters
         dfls = populate_include_lst_filters(dfls)
@@ -607,35 +613,57 @@ def set_tlistings():
         if contr_getll.button(f"Get Lowest Listed for: **{sch_phrase} - {item_loc_sn}**"):
             st.session_state.GET_LL_DATA = True
 
-        st.write(st.session_state.GET_LL_DATA)
+        #st.write(st.session_state.GET_LL_DATA)
         #contr_getll.write('#### Lowest Listings:')
 
-    # only populate once we have sch_phrase
-    if 'sch_phrase_in' not in st.session_state.keys():
-        return
+    if 'll' not in st.session_state.keys():
+        st.session_state.ll = {}
 
     # params
     sch_phrase = st.session_state.sch_phrase_in
     item_loc = st.session_state['sb']['item_loc']
     item_loc_sn = loc_map[item_loc]
-    itm_id = f"{sch_phrase}_{item_loc_sn}"
-    if len(sch_phrase)==0:
-        return
+    item_id = f"{sch_phrase}_{item_loc_sn}"
 
     tb_ll = st.session_state['tabs']['listings']
     with tb_ll:
-        # set frames
-        _set_stats_board()
+        if item_id not in st.session_state.ll.keys():
+            st.session_state.ll[item_id] = {}
 
-        if not st.session_state.GET_LL_DATA:
+        if len(sch_phrase)==0:
+            # use text box
+            sch_phrase = st.text_input(label='',
+                                       label_visibility='collapsed',
+                                       placeholder='Enter card name and number',
+                                       key='sch_phrase_ll'
+                                       )
+            sch_phrase = sch_phrase.strip()
+            GET_LL_DATA = True
+            st.session_state.ll[item_id]['GET_LL_DATA'] = GET_LL_DATA
+        else:
+            # use button
+            GET_LL_DATA = False
+            if st.button(f"Get Lowest Listed for: **{sch_phrase} - {item_loc_sn}**"):
+                GET_LL_DATA = True
+                st.session_state.ll[item_id]['GET_LL_DATA'] = GET_LL_DATA
+            else:
+                if 'GET_LL_DATA' in st.session_state.ll[item_id].keys():
+                    GET_LL_DATA = st.session_state.ll[item_id]['GET_LL_DATA']
+
+        if (len(sch_phrase)==0) | (not GET_LL_DATA):
             return
 
         # get dfll
+        parse_search_phrase(sch_phrase)
         sch_solds = False
         ipg = st.session_state['sb']['ipg']
         driver = st.session_state.chrome_driver
-        dfll = get_ebayau_listing_data_st(sch_phrase, item_loc, ipg, driver, sch_solds=sch_solds)
-        st.session_state['itms'][itm_id]['lowest_listed'] = dfll
+
+        if 'dfll' not in st.session_state.ll[item_id].keys():
+            dfll = get_ebayau_listing_data_st(sch_phrase, item_loc, ipg, driver, sch_solds=sch_solds)
+            st.session_state.ll[item_id]['dfll'] = dfll
+        else:
+            dfll = st.session_state.ll[item_id]['dfll']
 
         # apply filters
         dfll = populate_include_lst_filters(dfll, sch_solds)
@@ -646,12 +674,9 @@ def set_tlistings():
             st.write(f'### No listings available for: {sch_phrase} - {item_loc_sn}')
             return
 
+        st.write(dfll)
 
-
-
-        st.write(st.session_state)
-
-
+        # TODO: print listings
 
     pass
 
