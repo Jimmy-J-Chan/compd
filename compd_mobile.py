@@ -5,8 +5,6 @@ import re
 import os
 import string
 
-from streamlit import title
-
 from conf.config import ss_g, hist2days, loc_map
 from src.common import (set_scroll2top_button, set_chrome_driver, write_style_str,
                         is_float)
@@ -24,6 +22,69 @@ st.set_page_config(page_title="Compd",
                    page_icon='./logo/compd_logo_white.png',
                    )
 
+
+def populate_include_lst_filters(dfls, sch_solds=True):
+    dfls['title_stripped'] = dfls['title'].str.replace(r'[^\w\s]', '', regex=True)  # remove punctuation first
+    pattern_graded = st.session_state['sb']['pattern_graded']
+    mask = dfls['sold_date'] >= st.session_state['sb']['hist_sdate']
+    if is_float(st.session_state['sb']['prange_min']):
+        mask = mask & (dfls['price'] >= st.session_state['sb']['prange_min'])
+    if is_float(st.session_state['sb']['prange_max']):
+        mask = mask & (dfls['price'] <= st.session_state['sb']['prange_max'])
+    if (st.session_state['sb']['rm_best_offer']) & sch_solds:  # remove best offers
+        mask = mask & (dfls['auction_type'] != 'Best Offer')
+    if st.session_state['sb']['show_sltd_lsts']:  # show selected listings only
+        mask = mask & (dfls['include_lst'])
+    if st.session_state['sb']['mtch_card_num']:
+        # identify if graded card search
+        if 'graded_name' in st.session_state['sb'].keys():
+            pattern_found = st.session_state['sb']['graded_name']
+            st.session_state['sb']['rm_graded'] = False
+            graded_company = st.session_state['sb']['graded_company']
+            graded_num = st.session_state['sb']['graded_number']
+            tmp_pattern = rf"({graded_company})\s?({graded_num})\b"
+            mask = mask & (dfls['title'].str.contains(tmp_pattern, na=False, case=False))  # match graded name
+
+        # match card number
+        card_num0 = st.session_state['sb']['card_num0']
+        mask = mask & (dfls['title'].str.contains(f"{card_num0}", na=False, case=False))
+    if st.session_state['sb']['rm_graded']:
+        mask = mask & (~dfls['title'].str.contains(pattern_graded, na=False, case=False))
+    if st.session_state['sb']['mtch_srch_phrase']:
+        # must have name and card num in srch
+        # remove punctuation first
+        card_name = st.session_state['sb']['card_name']
+        table = str.maketrans('', '', string.punctuation)
+        card_name = card_name.translate(table)
+        card_name_tokens = [c.strip() for c in card_name.split(' ')]
+
+        # each token needs to be in the title
+        for token in card_name_tokens:
+            mask = mask & (dfls['title_stripped'].str.contains(token, na=False, case=False))
+
+        # match card number
+        card_num0 = st.session_state['sb']['card_num0']
+        mask = mask & (dfls['title'].str.contains(f"{card_num0}", na=False, case=False))
+    # if st.session_state['sb']['rm_outliers']:
+    #     # identify and remove outliers
+    #     dfls['include_lst_filters'] = mask
+    #     dfls = identify_lst_outliers(dfls)
+    #     mask = mask & (~dfls['is_outlier'])
+    if len(st.session_state['sb']['rm_kws']) > 0:
+        # remove keywords, comma seperated
+        kws = [c.strip() for c in st.session_state['sb']['rm_kws'].split(',')]
+        for kw in kws:
+            mask = mask & (~dfls['title_stripped'].str.contains(kw, na=False, case=False))
+    if st.session_state['sb']['l5s']:
+        # last 5 filtered sales
+        _df = dfls.copy().loc[mask]
+        _df = _df.loc[_df['include_lst']]
+        mask = mask & (dfls.index.isin(_df.head(5).index))
+
+    # update mask filters
+    dfls['include_lst_filters'] = mask
+
+    return dfls
 
 def set_tsearch():
     def _set_stats_board():
@@ -267,7 +328,6 @@ def set_tsearch():
                     itm_p = st.session_state['itms'][itm_id]['collectr']['itm_p']
                     st.session_state['itms'][itm_id]['collectr']['itm_p'] = itm_p/audusd
 
-
         # pattern to identify graded cards
         st.session_state['sb']['pattern_graded'] = r'(psa|cgc|bgs|beckett|ace|tag|ark)\s?([1-9](\.5)?|10)\b'
         st.session_state['sb']['pattern_graded_company'] = r'(psa|cgc|bgs|beckett|ace|tag|ark)\s?'
@@ -275,70 +335,12 @@ def set_tsearch():
         # parse the search phrase
         _parse_search_phrase()
 
-        # prep the data to be displayed
-        dfls['title_stripped'] = dfls['title'].str.replace(r'[^\w\s]', '', regex=True) # remove punctuation first
-        pattern_graded = st.session_state['sb']['pattern_graded']
-        mask = dfls['sold_date'] >= st.session_state['sb']['hist_sdate']
-        if is_float(st.session_state['sb']['prange_min']):
-            mask = mask & (dfls['price']>=st.session_state['sb']['prange_min'])
-        if is_float(st.session_state['sb']['prange_max']):
-            mask = mask & (dfls['price']<=st.session_state['sb']['prange_max'])
-        if st.session_state['sb']['rm_best_offer']:  # remove best offers
-            mask = mask & (dfls['auction_type']!='Best Offer')
-        if st.session_state['sb']['show_sltd_lsts']: # show selected listings only
-            mask = mask & (dfls['include_lst'])
-        if st.session_state['sb']['mtch_card_num']:
-            # identify if graded card search
-            if 'graded_name' in st.session_state['sb'].keys():
-                pattern_found = st.session_state['sb']['graded_name']
-                st.session_state['sb']['rm_graded'] = False
-                graded_company = st.session_state['sb']['graded_company']
-                graded_num = st.session_state['sb']['graded_number']
-                tmp_pattern = rf"({graded_company})\s?({graded_num})\b"
-                mask = mask & (dfls['title'].str.contains(tmp_pattern, na=False, case=False)) # match graded name
-
-            # match card number
-            card_num0 = st.session_state['sb']['card_num0']
-            mask = mask & (dfls['title'].str.contains(f"{card_num0}", na=False, case=False))
-        if st.session_state['sb']['rm_graded']:
-            mask = mask & (~dfls['title'].str.contains(pattern_graded, na=False, case=False))
-        if st.session_state['sb']['mtch_srch_phrase']:
-            # must have name and card num in srch
-            # remove punctuation first
-            card_name = st.session_state['sb']['card_name']
-            table = str.maketrans('', '', string.punctuation)
-            card_name = card_name.translate(table)
-            card_name_tokens = [c.strip() for c in card_name.split(' ')]
-
-            # each token needs to be in the title
-            for token in card_name_tokens:
-                mask = mask & (dfls['title_stripped'].str.contains(token, na=False, case=False))
-
-            # match card number
-            card_num0 = st.session_state['sb']['card_num0']
-            mask = mask & (dfls['title'].str.contains(f"{card_num0}", na=False, case=False))
-        if st.session_state['sb']['rm_outliers']:
-            # identify and remove outliers
-            dfls['include_lst_filters'] = mask
-            dfls = identify_lst_outliers(dfls)
-            mask = mask & (~dfls['is_outlier'])
-        if len(st.session_state['sb']['rm_kws'])>0:
-            # remove keywords, comma seperated
-            kws = [c.strip() for c in st.session_state['sb']['rm_kws'].split(',')]
-            for kw in kws:
-                mask = mask & (~dfls['title_stripped'].str.contains(kw, na=False, case=False))
-        if st.session_state['sb']['l5s']:
-            # last 5 filtered sales
-            _df = dfls.copy().loc[mask]
-            _df = _df.loc[_df['include_lst']]
-            mask = mask & (dfls.index.isin(_df.head(5).index))
-
-        # update mask filters
-        dfls['include_lst_filters'] = mask
+        # prep the data to be displayed - apply filters
+        dfls = populate_include_lst_filters(dfls)
 
         # update filter mask
         st.session_state['itms'][itm_id]['dfls']['include_lst_filters'] = dfls['include_lst_filters']
-        dfls = dfls.loc[mask] # lsts to display
+        dfls = dfls.loc[dfls['include_lst_filters']] # lsts to display
 
         # if no data returned
         if len(dfls)==0:
@@ -596,6 +598,62 @@ def set_ttrade():
         _set_trade_board()
     pass
 
+def set_tlistings():
+    def _set_stats_board():
+        contr_getll = st.container(border=True)
+        st.session_state.contr_getll = contr_getll
+
+        st.session_state.GET_LL_DATA = False
+        if contr_getll.button(f"Get Lowest Listed for: **{sch_phrase} - {item_loc_sn}**"):
+            st.session_state.GET_LL_DATA = True
+
+        st.write(st.session_state.GET_LL_DATA)
+        #contr_getll.write('#### Lowest Listings:')
+
+    # only populate once we have sch_phrase
+    if 'sch_phrase_in' not in st.session_state.keys():
+        return
+
+    # params
+    sch_phrase = st.session_state.sch_phrase_in
+    item_loc = st.session_state['sb']['item_loc']
+    item_loc_sn = loc_map[item_loc]
+    itm_id = f"{sch_phrase}_{item_loc_sn}"
+    if len(sch_phrase)==0:
+        return
+
+    tb_ll = st.session_state['tabs']['listings']
+    with tb_ll:
+        # set frames
+        _set_stats_board()
+
+        if not st.session_state.GET_LL_DATA:
+            return
+
+        # get dfll
+        sch_solds = False
+        ipg = st.session_state['sb']['ipg']
+        driver = st.session_state.chrome_driver
+        dfll = get_ebayau_listing_data_st(sch_phrase, item_loc, ipg, driver, sch_solds=sch_solds)
+        st.session_state['itms'][itm_id]['lowest_listed'] = dfll
+
+        # apply filters
+        dfll = populate_include_lst_filters(dfll, sch_solds)
+        dfll = dfll.loc[dfll['include_lst_filters']] # lsts to display
+
+        # if no data returned
+        if len(dfll)==0:
+            st.write(f'### No listings available for: {sch_phrase} - {item_loc_sn}')
+            return
+
+
+
+
+        st.write(st.session_state)
+
+
+
+    pass
 
 
 def compd_mobile():
@@ -604,10 +662,12 @@ def compd_mobile():
     set_session_state_groups()
     set_sidebar_elements()
     set_tabs()
+
+    # tabs
     set_tsearch()
+    set_tlistings()
     set_tport()
     set_ttrade()
-
     pass
 
 

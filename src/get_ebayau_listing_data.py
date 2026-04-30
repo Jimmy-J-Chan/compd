@@ -93,24 +93,44 @@ def parse_lsts_lwst_list(lsts):
     dfls = pd.DataFrame()
     for ix, lst in enumerate(lsts):
         # contents
-        cts = lst.find(class_="su-card-container__content")
-        cts = lst.find(class_="srp-results srp-list clearfix")
+        cts = lst.find(class_="su-card-container su-card-container--horizontal")
+
+        # media
+        media = cts.find(class_="su-card-container__media")
+        mediaL2 = media.find(class_="su-media-container s-card__media-wrapper")
+        mediaL3 = mediaL2.find(class_="su-media-multi-image")
+        mediaL4 = mediaL3.find('a', class_="s-card__link image-treatment")
+        img_url_base = mediaL4.img['src']
+        dfls.loc[ix, 'img_url0'] = img_url_base.rsplit('/', 1)[0]
+
+        # meta
+        meta = cts.find(class_="su-card-container__content")
 
         # header
-        hdr = cts.find(class_="su-card-container__header")
-        dfls.loc[ix, 'sold_date_str'] = hdr.find(class_="s-card__caption").text
+        hdr = meta.find(class_="su-card-container__header")
+        dfls.loc[ix,'sold_url'] = hdr.find(class_="s-card__link").attrs['href']
         title_contents = hdr.find(class_="s-card__link").find(class_="s-card__title").contents
         dfls.loc[ix, 'title'] = title_contents[1].text if len(title_contents)>2 else title_contents[0].text
-        dfls.loc[ix,'sold_url'] = hdr.find(class_="s-card__link").attrs['href']
+
 
         # attributes
         attr_p = cts.find(class_="su-card-container__attributes__primary")
         attrs_p = [t.text for t in attr_p.find_all('div')]
         dfls.loc[ix, 'price_str'] = attrs_p[0]
-        dfls.loc[ix, 'auction_type_str'] = attrs_p[1]
+
+        auc_strs = [c for c in attrs_p if (('Buy It Now' in c)|('or Best Offer' in c)|('bid' in c))]
+        dfls.loc[ix, 'auction_type_str'] = auc_strs[0] if len(auc_strs)>0 else ''
+
+        dlry_strs = [c for c in attrs_p if (('delivery' in c)|('postage' in c))]
+        dfls.loc[ix, 'delivery'] = dlry_strs[0] if len(dlry_strs)>0 else ''
+
         from_ctry_strs = [c for c in attrs_p if c.startswith('from ')]
         dfls.loc[ix, 'from_ctry_str'] = from_ctry_strs[0] if len(from_ctry_strs)>0 else ''
 
+        gst_strs = [c for c in attrs_p if (('GST' in c)|('VAT' in c))]
+        dfls.loc[ix,'gst'] = gst_strs[0] if len(gst_strs)>0 else ''
+
+        # seller
         try:
             attr_s = cts.find(class_="su-card-container__attributes__secondary")
             if attr_s is not None:
@@ -120,27 +140,16 @@ def parse_lsts_lwst_list(lsts):
         except:
             pass
 
-        # images
-        media = lst.find(class_="su-card-container__media")
-        img_url_base = media.find(class_='s-card__link image-treatment').find('img').attrs['src']
-        dfls.loc[ix, 'img_url0'] = img_url_base.rsplit('/', 1)[0]
-
-        # img sizes
-        # 140w  - /s-l140.webp
-        # 500w  - /s-l500.webp
-        # 960w  - /s-l960.webp
-        # 1600w - /s-l1600.webp
-
     # parse cols
     dfls['auction_type'] = None
     mask = dfls['auction_type_str'].isin(["or Best Offer","Buy It Now"])
     dfls.loc[mask,'auction_type'] = 'Buy It Now'
     mask = dfls['auction_type_str'].str.contains('bid|bids')
     dfls.loc[mask,'auction_type'] = 'Auction'
-    mask = dfls['auction_type_str']=='Best Offer accepted'
-    dfls.loc[mask,'auction_type'] = 'Best Offer'
+    # mask = dfls['auction_type_str']=='Best Offer accepted'
+    # dfls.loc[mask,'auction_type'] = 'Best Offer'
 
-    dfls['sold_date'] = pd.to_datetime(dfls['sold_date_str'].str.strip('Sold '), format='mixed')
+    #dfls['sold_date'] = pd.to_datetime(dfls['sold_date_str'].str.strip('Sold '), format='mixed')
     dfls['price'] = None
     dfls['num_p'] = dfls['price_str'].str.split('AU').str.len()-1
 
@@ -161,7 +170,7 @@ def parse_lsts_lwst_list(lsts):
     dfls.loc[mask, 'price'] = dfls.loc[mask, 'price_str'].str.replace('AU $','').str.replace(',','').astype(float)
 
     # sort by sold date desc
-    dfls = dfls.sort_values(by='sold_date', ascending=False)
+    dfls = dfls.sort_values(by='price', ascending=True)
 
     # keep best matches at top?
     return dfls
@@ -265,8 +274,6 @@ def get_ebayau_listing_data(sch_phrase, item_loc, ipg, _driver, sch_solds=True):
 def get_ebayau_listing_data_st(sch_phrase, item_loc, ipg, _driver, sch_solds):
     return get_ebayau_listing_data(sch_phrase, item_loc, ipg, _driver, sch_solds)
 
-
-
 def get_ebayau_lwst_lsted_data(sch_phrase, item_loc, ipg, _driver, sch_solds=False):
     return get_ebayau_listing_data(sch_phrase, item_loc, ipg, _driver, sch_solds)
 
@@ -278,8 +285,8 @@ if __name__ == '__main__':
     # sch_phrase = 'charizard 4 psa7'
     item_loc = 'Australia only' #'Worldwide' #
     ipg = 240
-    #dfls = get_ebayau_lwst_lsted_data(sch_phrase, item_loc, ipg, driver, sch_solds=False) # lowest listed
-    dfls = get_ebayau_listing_data(sch_phrase, item_loc, ipg, driver, sch_solds=True) # solds
+    dfll = get_ebayau_lwst_lsted_data(sch_phrase, item_loc, ipg, driver, sch_solds=False) # lowest listed
+    #dfls = get_ebayau_listing_data(sch_phrase, item_loc, ipg, driver, sch_solds=True) # solds
 
     # driver = get_chrome_driver(headless=False)
     # url = r'https://www.ebay.com.au/itm/187777556541?_skw=giratina+v+186%2F196&itmmeta=01KEEB37XCG43486XHR5GXVRHF&hash=item2bb86a203d:g:vG8AAeSwdVZpJjg1&itmprp=enc%3AAQAKAAAA8FkggFvd1GGDu0w3yXCmi1cGWJgSJWCKg7JEo77W2u9HcaUTer3y0L%2FdJDGnB197K8fDHhxzIIziwxB7z0g32qlCu4rEhN%2FzH7ad4ijZMQ%2F6PPh2tAqpHMxKZ4Ftgp%2FKh%2FR6ikYtMmR1%2FTE5w5MpSbtMNCbZqnGDFfO7Mj94cMqPlxgP0j7ordIyglZVHexwZVTvA5VL2DpFhMnuTDp14lJpOs9TblhGmyWPVGgqIA0jMhoLxjxInTX0wh24X1CXoZCqIJAS%2FBuyfXStD9tNI69m%2FCENHVGURERpouPsXW34NeRAeU1y0bzSgSXIwd6unQ%3D%3D%7Ctkp%3ABk9SR_T-jMvzZg'

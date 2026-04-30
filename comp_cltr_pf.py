@@ -295,7 +295,7 @@ if __name__ == '__main__':
     _update_pf_ebay = True
 
     # save locs - AU
-    fn_sfx = 'vc260427'
+    fn_sfx = 'vc_pc'
     item_loc = 'Australia only'
     detect_rarity = False
 

@@ -123,7 +123,7 @@ def set_sidebar_elements():
     # filter options
     st.session_state['sb']['rm_best_offer'] = st.sidebar.toggle("Remove Best Offers", value=True)
     st.session_state['sb']['rm_graded'] = st.sidebar.toggle("Remove Graded Cards", value=True)
-    st.session_state['sb']['rm_outliers'] = st.sidebar.toggle("Remove Outliers", value=False)
+    #st.session_state['sb']['rm_outliers'] = st.sidebar.toggle("Remove Outliers", value=False)
     st.session_state['sb']['mtch_card_num'] = st.sidebar.toggle("Match Card Num", value=True)
     st.session_state['sb']['mtch_srch_phrase'] = st.sidebar.toggle("Match Search Phrase", value=False)
     st.sidebar.markdown('<hr style="margin: 0px; border: 1px solid #ddd;">', unsafe_allow_html=True)
@@ -166,8 +166,9 @@ def set_sidebar_elements():
     #st.session_state['sb']['get_more_data'] = False
 
 def set_tabs():
-    tsearch, tport, ttrade = st.tabs(["Search", "Portfolio", "Trade"])
+    tsearch, tlistings, tport, ttrade = st.tabs(["Search", "Listings", "Portfolio", "Trade"])
     st.session_state['tabs']['search'] = tsearch
+    st.session_state['tabs']['listings'] = tlistings
     st.session_state['tabs']['portfolio'] = tport
     st.session_state['tabs']['trade'] = ttrade
 
