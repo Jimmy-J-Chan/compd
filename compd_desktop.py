@@ -93,7 +93,7 @@ def load_saved_data():
 
 
 def set_sidebar_elements():
-    vers_num = '2026-05-01 0028'
+    vers_num = '2026-05-01 2245'
     st.sidebar.image('./logo/compd_logo_white.png',)
     if st.sidebar.button('Clear Data'):
         reset_session_state_params_data()

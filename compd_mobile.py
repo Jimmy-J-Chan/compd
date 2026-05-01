@@ -604,17 +604,8 @@ def set_ttrade():
         _set_trade_board()
     pass
 
+
 def set_tlistings():
-    def _set_stats_board():
-        contr_getll = st.container(border=True)
-        st.session_state.contr_getll = contr_getll
-
-        st.session_state.GET_LL_DATA = False
-        if contr_getll.button(f"Get Lowest Listed for: **{sch_phrase} - {item_loc_sn}**"):
-            st.session_state.GET_LL_DATA = True
-
-        #st.write(st.session_state.GET_LL_DATA)
-        #contr_getll.write('#### Lowest Listings:')
 
     if 'll' not in st.session_state.keys():
         st.session_state.ll = {}
@@ -674,9 +665,37 @@ def set_tlistings():
             st.write(f'### No listings available for: {sch_phrase} - {item_loc_sn}')
             return
 
-        st.write(dfll)
+        # display parameters
+        c2_img_size = 140
 
-        # TODO: print listings
+        # display data
+        #st.write(dfll)
+        for ix, lst in dfll.iterrows():
+            # container - write horizontally
+            contr = st.container(border=True)
+            contr_1 = contr.container(horizontal=True,
+                                      horizontal_alignment="left", vertical_alignment="center",
+                                      gap='small') # select, image
+
+            # show img0
+            contr_1.image(f"{lst['img_url0']}/s-l{c2_img_size}.webp", width='content')
+
+            # write vertically now
+            contr_2 = contr_1.container(horizontal=False, horizontal_alignment="left",
+                                        vertical_alignment="center", gap="small")
+
+            # details
+            p = lst['price']
+            p_str = f"{lst['price_str']}".replace('$',' ') if pd.isnull(p) else f"AU ${lst['price']}"
+            #write_style_str(parent_obj=contr_2, str_out=f"Sold  {lst['sold_date']:%d %b %Y}", color="#7D615E", font_size="1em")
+            write_style_str(parent_obj=contr_2, str_out=lst['title'], color="#000000", font_size="1em", hyperlink=lst['sold_url'])
+            write_style_str(parent_obj=contr_2, str_out=p_str, color="#7D615E", font_size="1.5em", font_w='bold')
+            write_style_str(parent_obj=contr_2, str_out=lst['auction_type_str'])
+            dlv_str = f"{lst['delivery']} and \+{lst['gst']}" if len(lst['gst'])>0 else f"{lst['delivery']}"
+            write_style_str(parent_obj=contr_2, str_out=dlv_str)
+            #write_style_str(parent_obj=contr_2, str_out=lst['delivery'])#, color="#7D615E", font_size="1em", font_w='bold')
+            if len(lst['from_ctry_str'])>0:
+                write_style_str(parent_obj=contr_2, str_out=f"{lst['from_ctry_str']}", color="#7D615E", font_size="1em")
 
     pass
 

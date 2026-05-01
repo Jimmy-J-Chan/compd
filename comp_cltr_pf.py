@@ -271,8 +271,8 @@ def update_vc():
 
     driver = get_chrome_driver(headless=False, use_local=True, max_window=True)
     port_url = r'https://app.getcollectr.com/showcase/profile/24ba5413-66b8-4eb4-a5c3-fb93cd6480e0'
-    export_collectr_port(port_url, pf_loc, driver)
-    driver.close()
+    # export_collectr_port(port_url, pf_loc, driver)
+    # driver.close()
 
     for pf in pfs:
         fn_sfx = params[pf]['fn_sfx']
@@ -289,45 +289,45 @@ def update_vc():
 
 
 if __name__ == '__main__':
-    # update_vc()
+    update_vc()
 
-    _export_collectr_pf = True
-    _update_pf_ebay = True
-
-    # save locs - AU
-    fn_sfx = 'vc_pc'
-    item_loc = 'Australia only'
-    detect_rarity = False
-
-    # # save locs - Wrld
-    # fn_sfx = 'wrld'
-    # item_loc = 'Worldwide'
-    # detect_rarity = False
-
-    # # save locs - pris
-    # fn_sfx = 'PRE'
-    # detect_rarity = True
+    # _export_collectr_pf = True
+    # _update_pf_ebay = True
     #
-    # # save locs - bbwf
-    # fn_sfx = 'BBWF'
-    # detect_rarity = True
-
-    fn_sfx = f"_{fn_sfx}" if ((not fn_sfx.startswith('_')) and (len(fn_sfx)>0)) else fn_sfx
-    pf_loc = rf'{Path.cwd()}/saved_data/port_cltr{fn_sfx}.csv' # collectr port
-    pf_ebay_loc = rf'{Path.cwd()}/saved_data/port_cltr_ebay{fn_sfx}.csv' # collectr + ebay data
-    pf_ebay_lsts_loc = rf'{Path.cwd()}/saved_data/ebay_lsts{fn_sfx}.pkl' # store raw ebay listings
-
-    # 1) download collectr portfolio
-    if _export_collectr_pf:
-        driver = get_chrome_driver(headless=False, use_local=True, max_window=True)
-        port_url = r'https://app.getcollectr.com/showcase/profile/24ba5413-66b8-4eb4-a5c3-fb93cd6480e0'
-        export_collectr_port(port_url, pf_loc, driver)
-        driver.close()
-        pass
-
-    # 2)
-    if _update_pf_ebay:
-        update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc,
-                       update_lsts_only=False, detect_rarity=detect_rarity, item_loc=item_loc)
-    pass
+    # # save locs - AU
+    # fn_sfx = 'vc_pc'
+    # item_loc = 'Australia only'
+    # detect_rarity = False
+    #
+    # # # save locs - Wrld
+    # # fn_sfx = 'wrld'
+    # # item_loc = 'Worldwide'
+    # # detect_rarity = False
+    #
+    # # # save locs - pris
+    # # fn_sfx = 'PRE'
+    # # detect_rarity = True
+    # #
+    # # # save locs - bbwf
+    # # fn_sfx = 'BBWF'
+    # # detect_rarity = True
+    #
+    # fn_sfx = f"_{fn_sfx}" if ((not fn_sfx.startswith('_')) and (len(fn_sfx)>0)) else fn_sfx
+    # pf_loc = rf'{Path.cwd()}/saved_data/port_cltr{fn_sfx}.csv' # collectr port
+    # pf_ebay_loc = rf'{Path.cwd()}/saved_data/port_cltr_ebay{fn_sfx}.csv' # collectr + ebay data
+    # pf_ebay_lsts_loc = rf'{Path.cwd()}/saved_data/ebay_lsts{fn_sfx}.pkl' # store raw ebay listings
+    #
+    # # 1) download collectr portfolio
+    # if _export_collectr_pf:
+    #     driver = get_chrome_driver(headless=False, use_local=True, max_window=True)
+    #     port_url = r'https://app.getcollectr.com/showcase/profile/24ba5413-66b8-4eb4-a5c3-fb93cd6480e0'
+    #     export_collectr_port(port_url, pf_loc, driver)
+    #     driver.close()
+    #     pass
+    #
+    # # 2)
+    # if _update_pf_ebay:
+    #     update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc,
+    #                    update_lsts_only=False, detect_rarity=detect_rarity, item_loc=item_loc)
+    # pass
 
