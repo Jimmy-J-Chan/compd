@@ -361,6 +361,10 @@ def set_tsearch():
         # display parameters
         c2_img_size = 140
 
+        # sort by
+        if st.session_state['sb']['sort_p']:
+            dfls = dfls.sort_values(by='price', ascending=True)
+
         # display data
         #dfls = dfls.head(5)
         for ix, lst in dfls.iterrows():
@@ -618,6 +622,7 @@ def set_tlistings():
 
     tb_ll = st.session_state['tabs']['listings']
     with tb_ll:
+        st.write(st.session_state)
         if item_id not in st.session_state.ll.keys():
             st.session_state.ll[item_id] = {}
 
@@ -650,8 +655,18 @@ def set_tlistings():
         ipg = st.session_state['sb']['ipg']
         driver = st.session_state.chrome_driver
 
-        if 'dfll' not in st.session_state.ll[item_id].keys():
+        # check if any param that affect dfll has changed - loc and ipg
+        _refresh_data = False
+        if 'ipg' in st.session_state.ll[item_id].keys():
+            if ipg != st.session_state.ll[item_id]['ipg']:
+                _refresh_data = True
+
+        st.write(st.session_state) #TODO
+
+        if ('dfll' not in st.session_state.ll[item_id].keys()) | _refresh_data:
             dfll = get_ebayau_listing_data_st(sch_phrase, item_loc, ipg, driver, sch_solds=sch_solds)
+            st.session_state.ll[item_id]['ipg'] = ipg
+            #st.session_state.ll[item_id]['item_loc'] = item_loc
             st.session_state.ll[item_id]['dfll'] = dfll
         else:
             dfll = st.session_state.ll[item_id]['dfll']

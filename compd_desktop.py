@@ -126,6 +126,7 @@ def set_sidebar_elements():
     # filter options
     st.session_state['sb']['rm_best_offer'] = st.sidebar.toggle("Remove Best Offers", value=True)
     st.session_state['sb']['rm_graded'] = st.sidebar.toggle("Remove Graded Cards", value=True)
+    st.session_state['sb']['sort_p'] = st.sidebar.toggle("Sort Price - Lowest First", value=False)
     #st.session_state['sb']['rm_outliers'] = st.sidebar.toggle("Remove Outliers", value=False)
     st.session_state['sb']['mtch_card_num'] = st.sidebar.toggle("Match Card Num", value=True)
     st.session_state['sb']['mtch_srch_phrase'] = st.sidebar.toggle("Match Search Phrase", value=False)
