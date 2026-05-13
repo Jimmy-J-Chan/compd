@@ -283,7 +283,8 @@ if __name__ == '__main__':
     sch_phrase = 'mew ex 232'
     # #sch_phrase = 'aerodactyl v 180'
     # sch_phrase = 'charizard 4 psa7'
-    item_loc = 'Australia only' #'Worldwide' #
+    #item_loc = 'Australia only'
+    item_loc = 'Worldwide'
     ipg = 240
     dfll = get_ebayau_lwst_lsted_data(sch_phrase, item_loc, ipg, driver, sch_solds=False) # lowest listed
     #dfls = get_ebayau_listing_data(sch_phrase, item_loc, ipg, driver, sch_solds=True) # solds

@@ -76,7 +76,8 @@ def populate_include_lst_filters(dfls, sch_solds=True):
     if (st.session_state['sb']['rm_best_offer']) & sch_solds:  # remove best offers
         mask = mask & (dfls['auction_type'] != 'Best Offer')
     if st.session_state['sb']['show_sltd_lsts']:  # show selected listings only
-        mask = mask & (dfls['include_lst'])
+        if 'include_lst' in dfls.columns:
+            mask = mask & (dfls['include_lst'])
     if st.session_state['sb']['mtch_card_num']:
         # identify if graded card search
         if 'graded_name' in st.session_state['sb'].keys():
@@ -118,10 +119,11 @@ def populate_include_lst_filters(dfls, sch_solds=True):
         for kw in kws:
             mask = mask & (~dfls['title_stripped'].str.contains(kw, na=False, case=False))
     if st.session_state['sb']['l5s']:
-        # last 5 filtered sales
-        _df = dfls.copy().loc[mask]
-        _df = _df.loc[_df['include_lst']]
-        mask = mask & (dfls.index.isin(_df.head(5).index))
+        if 'include_lst' in dfls.columns:
+            # last 5 filtered sales
+            _df = dfls.copy().loc[mask]
+            _df = _df.loc[_df['include_lst']]
+            mask = mask & (dfls.index.isin(_df.head(5).index))
 
     # update mask filters
     dfls['include_lst_filters'] = mask
@@ -609,51 +611,46 @@ def set_ttrade():
     pass
 
 
-def set_tlistings():
 
+def set_tlistings():
     if 'll' not in st.session_state.keys():
         st.session_state.ll = {}
+        st.session_state.sch_phrase_ll = ''
 
     # params
-    sch_phrase = st.session_state.sch_phrase_in
     item_loc = st.session_state['sb']['item_loc']
     item_loc_sn = loc_map[item_loc]
-    item_id = f"{sch_phrase}_{item_loc_sn}"
-
+    ipg = st.session_state['sb']['ipg']
+    driver = st.session_state.chrome_driver
+    sch_solds = False
+    img_size = 140
     tb_ll = st.session_state['tabs']['listings']
+
+    # core
     with tb_ll:
-        st.write(st.session_state)
+        # if sold sch phrase
+        sch_phrase_in = st.session_state.sch_phrase_in
+        if len(sch_phrase_in)>0:
+            if st.button(f"Get Lowest Listed for: **{sch_phrase_in} - {item_loc_sn}**"):
+                st.session_state.sch_phrase_ll = sch_phrase_in
+                sch_phrase = sch_phrase_in
+
+        #set search box
+        sch_phrase = st.text_input(label='',
+                                   label_visibility='collapsed',
+                                   placeholder='Enter card name and number',
+                                   key='sch_phrase_ll'
+                                   ).strip()
+
+        if len(sch_phrase)==0:
+            return
+
+        item_id = f"{sch_phrase}_{item_loc_sn}"
         if item_id not in st.session_state.ll.keys():
             st.session_state.ll[item_id] = {}
 
-        if len(sch_phrase)==0:
-            # use text box
-            sch_phrase = st.text_input(label='',
-                                       label_visibility='collapsed',
-                                       placeholder='Enter card name and number',
-                                       key='sch_phrase_ll'
-                                       )
-            sch_phrase = sch_phrase.strip()
-            GET_LL_DATA = True
-            st.session_state.ll[item_id]['GET_LL_DATA'] = GET_LL_DATA
-        else:
-            # use button
-            GET_LL_DATA = False
-            if st.button(f"Get Lowest Listed for: **{sch_phrase} - {item_loc_sn}**"):
-                GET_LL_DATA = True
-                st.session_state.ll[item_id]['GET_LL_DATA'] = GET_LL_DATA
-            else:
-                if 'GET_LL_DATA' in st.session_state.ll[item_id].keys():
-                    GET_LL_DATA = st.session_state.ll[item_id]['GET_LL_DATA']
-
-        if (len(sch_phrase)==0) | (not GET_LL_DATA):
-            return
-
-        # get dfll
+        # parse sch phrase
         parse_search_phrase(sch_phrase)
-        sch_solds = False
-        ipg = st.session_state['sb']['ipg']
-        driver = st.session_state.chrome_driver
 
         # check if any param that affect dfll has changed - loc and ipg
         _refresh_data = False
@@ -661,12 +658,14 @@ def set_tlistings():
             if ipg != st.session_state.ll[item_id]['ipg']:
                 _refresh_data = True
 
-        st.write(st.session_state) #TODO
+        if 'dfll' in st.session_state.ll[item_id].keys():
+            if st.session_state.ll[item_id]['dfll'].empty:
+                _refresh_data = True
 
+        # get data
         if ('dfll' not in st.session_state.ll[item_id].keys()) | _refresh_data:
             dfll = get_ebayau_listing_data_st(sch_phrase, item_loc, ipg, driver, sch_solds=sch_solds)
             st.session_state.ll[item_id]['ipg'] = ipg
-            #st.session_state.ll[item_id]['item_loc'] = item_loc
             st.session_state.ll[item_id]['dfll'] = dfll
         else:
             dfll = st.session_state.ll[item_id]['dfll']
@@ -675,16 +674,13 @@ def set_tlistings():
         dfll = populate_include_lst_filters(dfll, sch_solds)
         dfll = dfll.loc[dfll['include_lst_filters']] # lsts to display
 
-        # if no data returned
+        # if no data left to show
         if len(dfll)==0:
             st.write(f'### No listings available for: {sch_phrase} - {item_loc_sn}')
             return
 
-        # display parameters
-        c2_img_size = 140
-
         # display data
-        #st.write(dfll)
+        # dfll = dfll.head(5) # TODO
         for ix, lst in dfll.iterrows():
             # container - write horizontally
             contr = st.container(border=True)
@@ -693,7 +689,7 @@ def set_tlistings():
                                       gap='small') # select, image
 
             # show img0
-            contr_1.image(f"{lst['img_url0']}/s-l{c2_img_size}.webp", width='content')
+            contr_1.image(f"{lst['img_url0']}/s-l{img_size}.webp", width='content')
 
             # write vertically now
             contr_2 = contr_1.container(horizontal=False, horizontal_alignment="left",
@@ -712,7 +708,11 @@ def set_tlistings():
             if len(lst['from_ctry_str'])>0:
                 write_style_str(parent_obj=contr_2, str_out=f"{lst['from_ctry_str']}", color="#7D615E", font_size="1em")
 
+        # # DEBUG: TODO
+        # st.write(st.session_state.sch_phrase_ll)
+        # st.write(st.session_state.ll)
     pass
+
 
 
 def compd_mobile():
