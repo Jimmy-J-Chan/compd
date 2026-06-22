@@ -230,23 +230,41 @@ def get_ebayau_listing_data(sch_phrase, item_loc, ipg, _driver, sch_solds=True):
     # encode url
     url = create_search_url(sch_phrase, item_loc, ipg, sch_solds)
 
-    # try and bypass - 1 refresh required
-    wait_time = 1
-    driver.get(url)
-    time.sleep(wait_time)
-    driver.get(url)
-    time.sleep(wait_time)
-    # n_tries = 2
-    # ACCESS_DENIED_FLAG = True
-    # for n in range(n_tries):
-    #     if ACCESS_DENIED_FLAG:
-    #         driver.get(url)
-    #         time.sleep(2)
-    #         ACCESS_DENIED_FLAG = 'Access Denied' in driver.page_source
-    # if ACCESS_DENIED_FLAG and (n==n_tries-1):
-    #     # could not bypass
-    #     return pd.DataFrame()
-    ##
+    load_method = ['reload','detect'][-1]
+    if load_method == 'detect':
+        # detect block then decide if refresh required
+        wait_time = 1
+        n_retries = 2
+        ACCESS_DENIED_FLAG = True
+        for n in range(n_retries):
+            if ACCESS_DENIED_FLAG:
+                driver.get(url)
+                time.sleep(wait_time)
+
+                # flag check 1
+                if 'error page' in driver.title.lower():
+                    continue
+
+                # flag check 2
+                psrc = driver.page_source
+                if 'Access Denied' in psrc:
+                    continue
+                #psrc_body = psrc.split('</head><body>')[-1]
+                if 'Something went wrong on our end' in psrc:
+                    continue
+
+                # no flags activated
+                ACCESS_DENIED_FLAG = False
+                break
+        if ACCESS_DENIED_FLAG and (n==n_retries-1):
+            return pd.DataFrame() # could not bypass
+    elif load_method == 'reload':
+        # try and bypass - 1 refresh required
+        wait_time = 1
+        driver.get(url) # load 1
+        time.sleep(wait_time)
+        driver.get(url) # load 2
+        time.sleep(wait_time)
 
     # Get the page source and hand it over to BeautifulSoup
     try:
@@ -286,8 +304,8 @@ if __name__ == '__main__':
     #item_loc = 'Australia only'
     item_loc = 'Worldwide'
     ipg = 240
-    dfll = get_ebayau_lwst_lsted_data(sch_phrase, item_loc, ipg, driver, sch_solds=False) # lowest listed
-    #dfls = get_ebayau_listing_data(sch_phrase, item_loc, ipg, driver, sch_solds=True) # solds
+    #dfll = get_ebayau_lwst_lsted_data(sch_phrase, item_loc, ipg, driver, sch_solds=False) # lowest listed
+    dfls = get_ebayau_listing_data(sch_phrase, item_loc, ipg, driver, sch_solds=True) # solds
 
     # driver = get_chrome_driver(headless=False)
     # url = r'https://www.ebay.com.au/itm/187777556541?_skw=giratina+v+186%2F196&itmmeta=01KEEB37XCG43486XHR5GXVRHF&hash=item2bb86a203d:g:vG8AAeSwdVZpJjg1&itmprp=enc%3AAQAKAAAA8FkggFvd1GGDu0w3yXCmi1cGWJgSJWCKg7JEo77W2u9HcaUTer3y0L%2FdJDGnB197K8fDHhxzIIziwxB7z0g32qlCu4rEhN%2FzH7ad4ijZMQ%2F6PPh2tAqpHMxKZ4Ftgp%2FKh%2FR6ikYtMmR1%2FTE5w5MpSbtMNCbZqnGDFfO7Mj94cMqPlxgP0j7ordIyglZVHexwZVTvA5VL2DpFhMnuTDp14lJpOs9TblhGmyWPVGgqIA0jMhoLxjxInTX0wh24X1CXoZCqIJAS%2FBuyfXStD9tNI69m%2FCENHVGURERpouPsXW34NeRAeU1y0bzSgSXIwd6unQ%3D%3D%7Ctkp%3ABk9SR_T-jMvzZg'

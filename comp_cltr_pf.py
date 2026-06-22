@@ -191,8 +191,9 @@ def update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts_only=True,
         # update previous check
         update_cache = False
         if sch_phrase_id in ebay_lsts.keys():
-            update_dt = ebay_lsts[sch_phrase_id]['update_dt'].iloc[0]
-            if update_dt < today:
+            if ebay_lsts[sch_phrase_id].empty:
+                update_cache = True
+            elif ebay_lsts[sch_phrase_id]['update_dt'].iloc[0] < today:
                 update_cache = True
 
         if (sch_phrase_id not in ebay_lsts.keys()) | update_lsts_only | update_cache:
@@ -271,8 +272,8 @@ def update_vc():
 
     driver = get_chrome_driver(headless=False, use_local=True, max_window=True)
     port_url = r'https://app.getcollectr.com/showcase/profile/24ba5413-66b8-4eb4-a5c3-fb93cd6480e0'
-    # export_collectr_port(port_url, pf_loc, driver)
-    # driver.close()
+    export_collectr_port(port_url, pf_loc, driver)
+    driver.close()
 
     for pf in pfs:
         fn_sfx = params[pf]['fn_sfx']
@@ -288,14 +289,36 @@ def update_vc():
     pass
 
 
+def merge_vc_wrld():
+    fn_vc = rf'{Path.cwd()}/saved_data/port_cltr_ebay_vc.csv'
+    fn_wrld = rf'{Path.cwd()}/saved_data/port_cltr_ebay_wrld.csv'
+    pf_vc = pd.read_csv(fn_vc).set_index('sch_phrase',drop=False)
+    pf_wrld = pd.read_csv(fn_wrld).set_index('sch_phrase',drop=False)
+
+    mask = pf_vc['p_ebay_median_high'].isnull()
+    pf_vc.loc[mask,'p_ebay_median_high'] = pf_vc.loc[mask,['p_ebay_q75_high','price_collectr']].min(axis=1)
+    mask = pf_wrld['p_ebay_median_high'].isnull()
+    pf_wrld.loc[mask,'p_ebay_median_high'] = pf_wrld.loc[mask,['p_ebay_q75_high','price_collectr']].min(axis=1)
+
+    cols2keep = ['p_ebay_median_high','p_ebay_q75_high','price_collectr','sch_phrase']
+    colrn = ['median','q75','collectr','sch_phrase']
+
+    pf_vc2 = pf_vc[cols2keep].set_axis([('AU',c) for c in colrn],axis=1)
+    pf_wrld2 = pf_wrld[cols2keep].set_axis([('Wrld',c) for c in colrn],axis=1)
+
+    pf = pd.concat([pf_vc2,pf_wrld2], axis=1)  #.sort_values(('AU','median'), ascending=False)
+    pf.to_csv(rf'{Path.cwd()}/saved_data/port_cltr_ebay_vcm.csv',index=False)
+    pass
+
 if __name__ == '__main__':
-    #update_vc()
+    # update_vc()
+    # merge_vc_wrld()
 
     _export_collectr_pf = True
     _update_pf_ebay = True
 
     # save locs - AU
-    fn_sfx = 'vc260505'
+    fn_sfx = 'ohrio08'
     item_loc = 'Australia only'
     detect_rarity = False
     #
@@ -304,13 +327,13 @@ if __name__ == '__main__':
     # # item_loc = 'Worldwide'
     # # detect_rarity = False
     #
-    # # # save locs - pris
-    # # fn_sfx = 'PRE'
-    # # detect_rarity = True
-    # #
-    # # # save locs - bbwf
-    # # fn_sfx = 'BBWF'
-    # # detect_rarity = True
+    # save locs - pris
+    # fn_sfx = 'PRE'
+    # detect_rarity = True
+    #
+    # # save locs - bbwf
+    # fn_sfx = 'BBWF'
+    # detect_rarity = True
 
     fn_sfx = f"_{fn_sfx}" if ((not fn_sfx.startswith('_')) and (len(fn_sfx)>0)) else fn_sfx
     pf_loc = rf'{Path.cwd()}/saved_data/port_cltr{fn_sfx}.csv' # collectr port
@@ -321,6 +344,7 @@ if __name__ == '__main__':
     if _export_collectr_pf:
         driver = get_chrome_driver(headless=False, use_local=True, max_window=True)
         port_url = r'https://app.getcollectr.com/showcase/profile/24ba5413-66b8-4eb4-a5c3-fb93cd6480e0'
+        port_url = r'https://app.getcollectr.com/showcase/profile/ohrio08'
         export_collectr_port(port_url, pf_loc, driver)
         driver.close()
         pass
