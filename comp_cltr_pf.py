@@ -272,8 +272,16 @@ def update_vc():
 
     driver = get_chrome_driver(headless=False, use_local=True, max_window=True)
     port_url = r'https://app.getcollectr.com/showcase/profile/24ba5413-66b8-4eb4-a5c3-fb93cd6480e0'
-    export_collectr_port(port_url, pf_loc, driver)
-    driver.close()
+
+    update_pf_loc = False
+    if os.path.isfile(pf_loc):
+        last_update_dt = pd.to_datetime(os.path.getmtime(pf_loc), unit="s")
+        if (last_update_dt.date() < pd.Timestamp.now().date()) | update_pf_loc:
+            export_collectr_port(port_url, pf_loc, driver)
+            driver.close()
+    else:
+        export_collectr_port(port_url, pf_loc, driver)
+        driver.close()
 
     for pf in pfs:
         fn_sfx = params[pf]['fn_sfx']
@@ -318,22 +326,9 @@ if __name__ == '__main__':
     _update_pf_ebay = True
 
     # save locs - AU
-    fn_sfx = 'ohrio08'
+    fn_sfx = 'imsubtle_trades'
     item_loc = 'Australia only'
     detect_rarity = False
-    #
-    # # # save locs - Wrld
-    # # fn_sfx = 'wrld'
-    # # item_loc = 'Worldwide'
-    # # detect_rarity = False
-    #
-    # save locs - pris
-    # fn_sfx = 'PRE'
-    # detect_rarity = True
-    #
-    # # save locs - bbwf
-    # fn_sfx = 'BBWF'
-    # detect_rarity = True
 
     fn_sfx = f"_{fn_sfx}" if ((not fn_sfx.startswith('_')) and (len(fn_sfx)>0)) else fn_sfx
     pf_loc = rf'{Path.cwd()}/saved_data/port_cltr{fn_sfx}.csv' # collectr port
@@ -344,7 +339,7 @@ if __name__ == '__main__':
     if _export_collectr_pf:
         driver = get_chrome_driver(headless=False, use_local=True, max_window=True)
         port_url = r'https://app.getcollectr.com/showcase/profile/24ba5413-66b8-4eb4-a5c3-fb93cd6480e0'
-        port_url = r'https://app.getcollectr.com/showcase/profile/ohrio08'
+        port_url = r'https://app.getcollectr.com/showcase/profile/imsubtle'
         export_collectr_port(port_url, pf_loc, driver)
         driver.close()
         pass

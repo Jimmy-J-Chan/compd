@@ -53,7 +53,12 @@ def load_pf_all_itms(driver):
         # Calculate new scroll height and compare with last scroll height
         new_height = driver.execute_script("return document.body.scrollHeight")
         if new_height == last_height:
-            break
+            # double check
+            time.sleep(7)
+            tmph = driver.execute_script("return document.body.scrollHeight")
+            if tmph == last_height:
+                break
+
         last_height = new_height
     pass
 
