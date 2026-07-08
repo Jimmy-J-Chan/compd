@@ -322,11 +322,11 @@ if __name__ == '__main__':
     # update_vc()
     # merge_vc_wrld()
 
-    _export_collectr_pf = True
+    _export_collectr_pf = False #True
     _update_pf_ebay = True
 
     # save locs - AU
-    fn_sfx = 'imsubtle_trades'
+    fn_sfx = 'paf'
     item_loc = 'Australia only'
     detect_rarity = False
 
@@ -339,7 +339,7 @@ if __name__ == '__main__':
     if _export_collectr_pf:
         driver = get_chrome_driver(headless=False, use_local=True, max_window=True)
         port_url = r'https://app.getcollectr.com/showcase/profile/24ba5413-66b8-4eb4-a5c3-fb93cd6480e0'
-        port_url = r'https://app.getcollectr.com/showcase/profile/imsubtle'
+        #port_url = r'https://app.getcollectr.com/showcase/profile/imsubtle'
         export_collectr_port(port_url, pf_loc, driver)
         driver.close()
         pass

@@ -21,6 +21,93 @@ def parse_lsts_solds(lsts):
 
         # header
         hdr = cts.find(class_="su-card-container__header")
+        dfls.loc[ix, 'sold_date_str'] = hdr.find(class_="signal signal--recent").text
+        #title_contents = hdr.find(class_="s-card__link").find(class_="s-card__title").contents
+        dfls.loc[ix, 'title'] = hdr.find(class_="su-styled-text default clamped").text
+        dfls.loc[ix,'sold_url'] = hdr.find(class_="su-link su-item-card__title").attrs['href']
+
+        # attributes
+        # attr_p = cts.find(class_="su-card-container__attributes__primary")
+        # attrs_p = [t.text for t in attr_p.find_all('div')]
+        dfls.loc[ix, 'price_str'] = hdr.find(class_='su-item-card__price-container').text
+
+        attrs_p = cts.find(class_="su-card-container__attributes__primary").find_all('span', recursive=False)
+        attrs_p = [c for c in attrs_p]
+        attrs_p_at = [c for c in attrs_p if
+                      ('bid' in c.text)|
+                      ('Best Offer accepted' in c.text)|
+                      ('or Best Offer' in c.text)|
+                      ('Buy It Now' in c.text)
+                      ]
+        dfls.loc[ix, 'auction_type_str'] = attrs_p_at[0].text if len(attrs_p_at)>0 else ''
+
+        from_ctry_strs = [c for c in attrs_p if c.text.startswith('from ')]
+        dfls.loc[ix, 'from_ctry_str'] = from_ctry_strs[0].text if len(from_ctry_strs)>0 else ''
+
+        try:
+            attr_s = attr_s = cts.find(class_="su-program-badge")
+            if attr_s is not None:
+                attr_s_txt = attr_s.text
+                dfls.loc[ix, 'seller_name'] = attr_s_txt.split(' ',1)[0]
+                dfls.loc[ix, 'seller_rating'] = attr_s_txt.split(' ',1)[1]
+        except:
+            pass
+
+        # images
+        media = lst.find(class_="su-image")
+        img_url_base = media.find(class_="image-treatment").find('img').attrs['src']
+        dfls.loc[ix, 'img_url0'] = img_url_base.rsplit('/', 1)[0]
+
+        # img sizes
+        # 140w  - /s-l140.webp
+        # 500w  - /s-l500.webp
+        # 960w  - /s-l960.webp
+        # 1600w - /s-l1600.webp
+
+    # parse cols
+    dfls['auction_type'] = None
+    mask = dfls['auction_type_str'].isin(["or Best Offer","Buy It Now"])
+    dfls.loc[mask,'auction_type'] = 'Buy It Now'
+    mask = dfls['auction_type_str'].str.contains('bid|bids')
+    dfls.loc[mask,'auction_type'] = 'Auction'
+    mask = dfls['auction_type_str']=='Best Offer accepted'
+    dfls.loc[mask,'auction_type'] = 'Best Offer'
+
+    dfls['sold_date'] = pd.to_datetime(dfls['sold_date_str'].str.strip('Sold '), format='mixed')
+    dfls['price'] = None
+    dfls['num_p'] = dfls['price_str'].str.split('AU').str.len()-1
+
+    mask = dfls['auction_type_str'].isin(['or Best Offer','Buy It Now','Best Offer accepted'])
+    mask = mask | (dfls['auction_type_str'].str.contains('bid|bids'))
+    mask = mask != (dfls['price_str'].str.contains('to'))
+    mask = mask & (dfls['num_p']==1)
+    dfls.loc[mask, 'price'] = dfls.loc[mask, 'price_str'].str.replace('AU $','').str.replace(',','').astype(float)
+    # if price drops
+    mask = (dfls['num_p']>1) & (dfls['auction_type_str']=='Best Offer accepted')
+    if mask.sum()>0:
+        dfls.loc[mask,'price'] = dfls.loc[mask]['price_str'].str.split('AU', expand=True)[1]
+        dfls.loc[mask, 'price'] = dfls.loc[mask,'price'].str.replace(r'[$, ]', '', regex=True).astype(float)
+    dfls['price'] = dfls['price'].astype(float)
+
+    # edge case 1
+    mask = (dfls['price'].isnull()) & (dfls['price_str'].str.startswith('AU $')) & (dfls['num_p']==1)
+    dfls.loc[mask, 'price'] = dfls.loc[mask, 'price_str'].str.replace('AU $','').str.replace(',','').astype(float)
+
+    # sort by sold date desc
+    dfls = dfls.sort_values(by='sold_date', ascending=False)
+
+    # keep best matches at top?
+    return dfls
+
+def parse_lsts_solds1(lsts):
+    #cols = ['sol']
+    dfls = pd.DataFrame()
+    for ix, lst in enumerate(lsts):
+        # contents
+        cts = lst.find(class_="su-card-container__content")
+
+        # header
+        hdr = cts.find(class_="su-card-container__header")
         dfls.loc[ix, 'sold_date_str'] = hdr.find(class_="s-card__caption").text
         title_contents = hdr.find(class_="s-card__link").find(class_="s-card__title").contents
         dfls.loc[ix, 'title'] = title_contents[1].text if len(title_contents)>2 else title_contents[0].text
@@ -233,7 +320,7 @@ def get_ebayau_listing_data(sch_phrase, item_loc, ipg, _driver, sch_solds=True):
     load_method = ['reload','detect'][-1]
     if load_method == 'detect':
         # detect block then decide if refresh required
-        wait_time = 1
+        wait_time = 2
         n_retries = 2
         ACCESS_DENIED_FLAG = True
         for n in range(n_retries):
@@ -269,18 +356,35 @@ def get_ebayau_listing_data(sch_phrase, item_loc, ipg, _driver, sch_solds=True):
     # Get the page source and hand it over to BeautifulSoup
     try:
         soup = BeautifulSoup(driver.page_source, 'html.parser')
-        all_lsts = soup.find_all('ul', class_='srp-results srp-list clearfix')[0].find_all('li')
-        lsts = [l for l in all_lsts if 'id' in l.attrs.keys()]
+
+        try:
+            all_lsts = soup.find_all('ul', class_='srp-results srp-list clearfix')[0].find_all('li')
+            lsts = [l for l in all_lsts if 'id' in l.attrs.keys()]
+            parse_flag = 0
+        except:
+            all_lsts = soup.find_all('ul', class_='su-grid su-grid--is-list')[0].find_all('li')
+            if sch_solds:
+                lsts = [l for l in all_lsts if l.text.startswith('Sold')]
+                # lsts = [l for l in all_lsts if 'class' in l.attrs.keys()]
+                # lsts = [l for l in lsts if 'Results pagination' not in l.text]
+                # lsts = [l for l in lsts if (len(l.attrs)>0) & (len(l.text)>0)]
+            parse_flag = 1
         if len(lsts)==0:
             return pd.DataFrame()
     except:
         return pd.DataFrame()
 
     # parse all listings into a df - include links to images
-    if sch_solds:
-        dfls = parse_lsts_solds(lsts)
-    else:
-        dfls = parse_lsts_lwst_list(lsts)
+    if parse_flag==0:
+        if sch_solds:
+            dfls = parse_lsts_solds1(lsts)
+        else:
+            dfls = parse_lsts_lwst_list(lsts)
+    elif parse_flag==1:
+        if sch_solds:
+            dfls = parse_lsts_solds(lsts)
+        else:
+            dfls = parse_lsts_lwst_list(lsts)
 
     # remove int sales listings if au only
     if item_loc in ['Australia only']:
@@ -297,8 +401,8 @@ def get_ebayau_lwst_lsted_data(sch_phrase, item_loc, ipg, _driver, sch_solds=Fal
 
 if __name__ == '__main__':
     driver = get_chrome_driver(headless=True, use_local=True, max_window=True)
-    #sch_phrase = 'giratina v 186/196'
-    sch_phrase = 'mew ex 232'
+    sch_phrase = 'giratina v 186/196'
+    #sch_phrase = 'mew ex 232'
     # #sch_phrase = 'aerodactyl v 180'
     # sch_phrase = 'charizard 4 psa7'
     #item_loc = 'Australia only'

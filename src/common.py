@@ -37,7 +37,8 @@ def get_chrome_driver(headless=True, use_local=False, max_window=False):
     # Set up Chrome options
     chrome_options = Options()
     if headless:
-        chrome_options.add_argument("--headless=new")  # Uncomment to run without a visible window
+        chrome_options.add_argument("--headless=old")
+        #chrome_options.add_argument("--headless=new")  # Uncomment to run without a visible window
     #chrome_options.add_argument("--disable-blink-features=AutomationControlled")
     # iphone_ua = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Mobile/15E148 Safari/604.1"
     # iphone_ua = "Mozilla/5.0 (Linux; Android 15; SM-S931B Build/AP3A.240905.015.A2; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/127.0.6533.103 Mobile Safari/537.36"
