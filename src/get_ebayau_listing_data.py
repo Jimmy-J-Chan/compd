@@ -336,6 +336,7 @@ def get_ebayau_listing_data(sch_phrase, item_loc, ipg, _driver, sch_solds=True):
                 #         pass
                 #     if len(driver.title)>0:
                 #         break
+                driver.refresh()
                 driver.get(url)
                 time.sleep(5)
 
