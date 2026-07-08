@@ -57,11 +57,12 @@ def get_chrome_driver(headless=True, use_local=False, max_window=False):
     #chrome_options.add_argument("window-size=393,852")
     #chrome_options.add_argument("--disable-gpu")
 
-    if (st.context.url in ['http://localhost:8501']) | use_local:
-        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()),options=chrome_options)
-    else:
-        driver = webdriver.Chrome(service=Service(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()),
-                                  options=chrome_options)
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+    # if (st.context.url in ['http://localhost:8501']) | use_local:
+    #     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()),options=chrome_options)
+    # else:
+    #     driver = webdriver.Chrome(service=Service(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()),
+    #                               options=chrome_options)
     if max_window:
         driver.maximize_window()
     return driver
