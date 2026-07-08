@@ -77,6 +77,9 @@ def get_chrome_driver(headless=True, use_local=False, max_window=False):
 
     service = Service()
     driver = webdriver.Chrome(service=service, options=options)
+
+    if max_window:
+        driver.maximize_window()
     return driver
 
 def set_chrome_driver():

@@ -326,19 +326,8 @@ def get_ebayau_listing_data(sch_phrase, item_loc, ipg, _driver, sch_solds=True):
         for n in range(n_retries):
             if ACCESS_DENIED_FLAG:
 
-                # # tab might crash
-                # for _ in range(3):
-                #     try:
-                #         driver.get(url)
-                #         time.sleep(wait_time)
-                #     except:
-                #         time.sleep(1)
-                #         pass
-                #     if len(driver.title)>0:
-                #         break
-                driver.refresh()
                 driver.get(url)
-                time.sleep(5)
+                time.sleep(wait_time)
 
                 # flag check 1
                 if 'error page' in driver.title.lower():
