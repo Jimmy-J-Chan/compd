@@ -33,7 +33,7 @@ def set_scroll2top_button():
         unsafe_allow_html=True
     )
 
-def get_chrome_driver(headless=True, use_local=False, max_window=False):
+def get_chrome_driver1(headless=True, use_local=False, max_window=False):
     # Set up Chrome options
     chrome_options = Options()
     if headless:
@@ -66,6 +66,17 @@ def get_chrome_driver(headless=True, use_local=False, max_window=False):
 
     if max_window:
         driver.maximize_window()
+    return driver
+
+
+def get_chrome_driver(headless=True, use_local=False, max_window=False):
+    options = webdriver.ChromeOptions()
+
+    if headless:
+        options.add_argument('--headless')
+
+    service = Service()
+    driver = webdriver.Chrome(service=service, options=options)
     return driver
 
 def set_chrome_driver():
