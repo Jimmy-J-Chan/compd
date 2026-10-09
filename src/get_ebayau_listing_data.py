@@ -2,11 +2,11 @@ import pandas as pd
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+
 from bs4 import BeautifulSoup
 import time
 import streamlit as st
 from src.common import get_chrome_driver, encode_str
-#import urllib.parse
 
 def close_chrome_driver(driver):
     driver.quit()
@@ -320,14 +320,21 @@ def get_ebayau_listing_data(sch_phrase, item_loc, ipg, _driver, sch_solds=True):
     load_method = ['reload','detect'][-1]
     if load_method == 'detect':
         # detect block then decide if refresh required
-        wait_time = 2
-        n_retries = 2
+        wait_time = [2,10,20,30,40,50]+[60]*10
+        n_retries = 10
         ACCESS_DENIED_FLAG = True
+        prev_use_url = False
         for n in range(n_retries):
             if ACCESS_DENIED_FLAG:
 
-                driver.get(url)
-                time.sleep(wait_time)
+                time.sleep(wait_time[n])
+                if prev_use_url:
+                    driver.refresh()
+                    prev_use_url = False
+                else:
+                    driver.get(url)
+                    prev_use_url = True
+                time.sleep(2)
 
                 # flag check 1
                 if 'error page' in driver.title.lower():
@@ -401,7 +408,7 @@ def get_ebayau_lwst_lsted_data(sch_phrase, item_loc, ipg, _driver, sch_solds=Fal
     return get_ebayau_listing_data(sch_phrase, item_loc, ipg, _driver, sch_solds)
 
 if __name__ == '__main__':
-    driver = get_chrome_driver(headless=True, use_local=True, max_window=True)
+    driver = get_chrome_driver(headless=False, use_local=True, max_window=True)
     sch_phrase = 'giratina v 186/196'
     #sch_phrase = 'mew ex 232'
     # #sch_phrase = 'aerodactyl v 180'

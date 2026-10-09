@@ -63,12 +63,13 @@ def load_pf_all_itms(driver):
     pass
 
 def get_current_ccy(driver):
-    wait = WebDriverWait(driver, 2)
+    wait = WebDriverWait(driver, 5)
     try:
         ccy_xpath = r'/html/body/div[2]/div[1]/div/div/div[3]/div[1]/button[2]/p'
         ccy_button = wait.until(EC.element_to_be_clickable((By.XPATH, ccy_xpath)))
     except:
-        ccy_xpath = r'/html/body/div[2]/div[1]/div/div/div[3]/div[2]/button/p'
+        #ccy_xpath = r'/html/body/div[2]/div[1]/div/div/div[3]/div[2]/button/p'
+        ccy_xpath = r'/html/body/div[2]/div/div[1]/div/div/div[3]/div[1]/button[2]/p'
         ccy_button = wait.until(EC.element_to_be_clickable((By.XPATH, ccy_xpath)))
     ccy = ccy_button.text.strip()
     return ccy

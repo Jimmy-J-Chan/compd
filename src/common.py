@@ -72,6 +72,21 @@ def get_chrome_driver1(headless=True, use_local=False, max_window=False):
 def get_chrome_driver(headless=True, use_local=False, max_window=False):
     options = webdriver.ChromeOptions()
 
+    # options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+    #options.add_argument("window-size=1280,800")
+    #options.add_argument("window-size=393,852")
+    #options.add_argument("--disable-gpu")
+
+    # headers = {
+    #     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    #     "Accept-Language": "en-US,en;q=0.9",
+    #     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    # }
+    #
+    # options.add_argument("User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
+    # options.add_argument("Accept-Language=en-US,en;q=0.9")
+    # options.add_argument("Accept=text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
+
     if headless:
         options.add_argument('--headless')
 

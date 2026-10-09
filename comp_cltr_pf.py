@@ -82,6 +82,7 @@ def filter_ebay_data(sch_phrase, dfls):
         table = str.maketrans('', '', string.punctuation)
         card_name = card_name.translate(table)
         card_name_tokens = [c.strip() for c in card_name.split(' ')]
+        card_name_tokens = [c for c in card_name_tokens if c!='JP']
 
         # each token needs to be in the title
         # remove punctuation first
@@ -143,8 +144,27 @@ def filter_by_promo_rarity(sch_phrase, dfls):
     dfls['include_lst_filters'] = mask & dfls['include_lst_filters']
     return dfls
 
+def login_ebay_au(driver):
+    # login if needed
+    # EMAIL = 'copos22517@gwshare.com'
+    # PW = 'aapleby123'
 
-def update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts_only=True, detect_rarity=False, item_loc=None):
+    # url = r'https://www.ebay.com.au/sch/i.html?_nkw=giratina+v+186%2F196&LH_Sold=1&LH_Complete=1&LH_PrefLoc=1&_sop=13&_ipg=60'
+    # driver.get(url)
+
+    # goto url and login manually, search mew ex 232, click solds, error page, refresh
+    url = 'https://www.ebay.com.au'
+
+    # enter login details / do captcha
+    # while True:
+    #     flag_continue = input('-> Ready to continue? y/n')
+    #     if flag_continue.lower() in ['y','yes']:
+    #         return
+    pass
+
+
+def update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts_only=True, detect_rarity=False, item_loc=None,
+                   export_sch_phrase_only=False):
     # parameters
     today = pd.Timestamp.today().normalize()
     item_loc = 'Australia only' if item_loc is None else item_loc
@@ -176,7 +196,16 @@ def update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts_only=True,
     pf['sch_phrase'] = pf['name_str'] + ' ' + pf['itm_number_str'] + ' ' + pf['graded_str']
     pf['sch_phrase'] = pf['sch_phrase'].str.strip()
 
+    if export_sch_phrase_only:
+        pf['prev'] = ''
+        pf['collectr'] = pf['price_collectr']
+        pf['ebay'] = ''
+        pf.to_csv(pf_ebay_loc, index=False)
+        return
+
     driver = get_chrome_driver(headless=False, use_local=True, max_window=True)
+    login_ebay_au(driver)
+
     num_len = len(pf)
     pf_ebay = pf.copy()
 
@@ -225,6 +254,7 @@ def update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts_only=True,
             hz_str2 = hz_str.replace(' ', '').replace('weeks','w').replace('week','w').strip()
             pf_ebay.loc[ix, f"p_ebay_q75_{hz_str2}"] = dfls_h['price'].quantile(0.75)
             pf_ebay.loc[ix, f"p_ebay_median_{hz_str}"] = dfls_h['price'].median()
+            pf_ebay.loc[ix, f"p_ebay_med_l5_{hz_str}"] = dfls_h['price'].head(5).median() # 5 latest sales median
             # pf_ebay.loc[ix, f"price_ebay_max_{hz_str}"] = dfls_h['price'].max()
 
     # # calc some prices
@@ -232,12 +262,13 @@ def update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts_only=True,
     median_cols = [c for c in pf_ebay.columns if c.startswith('p_ebay_median_')]
     pf_ebay['p_ebay_q75_high'] = pf_ebay[q75_cols].max(axis=1)
     pf_ebay['p_ebay_median_high'] = pf_ebay[median_cols].max(axis=1)
+    pf_ebay['p_ebay_med_l5'] = pf_ebay['p_ebay_med_l5_4 weeks']
 
     if update_lsts_only:
         return
 
     # delete some cols
-    pcols = median_cols + ['p_ebay_median_high','p_ebay_q75_high','price_collectr']
+    pcols = median_cols + ['p_ebay_med_l5','p_ebay_median_high','p_ebay_q75_high','price_collectr']
     cols2keep = ['name','set','rarity','itm_number','graded','currency','qty']
     cols2keep = cols2keep + pcols + ['sch_phrase']
     pf_ebay = pf_ebay[cols2keep]
@@ -249,8 +280,17 @@ def update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc, update_lsts_only=True,
     #pf_ebay['pf_q75_total'] = (pf_ebay['qty'] * pf_ebay['p_ebay_q75_high']).sum().round(2)
     #pf_ebay['pf_cltr_total'] = (pf_ebay['qty'] * pf_ebay['price_collectr']).sum().round(2)
 
+    # add + move cols
+    pf_ebay['prev'] = '' # prev
+    pf_ebay['actual'] = '' # actual
+    pf_ebay['cltr'] = pf_ebay['price_collectr'] # cltr
+    pf_ebay['cltr_gst'] = pf_ebay['price_collectr'] * 1.1 # cltr_gst
+    pf_ebay['ebay_l5'] = pf_ebay['p_ebay_med_l5'] # ebay_med_l5
+    pf_ebay['ebay_med'] = pf_ebay['p_ebay_median_high'] # ebay_med
+    pf_ebay['ebay_q75'] = pf_ebay['p_ebay_q75_high'] # ebay_q75
+    pf_ebay['ebay_l5_cltr_avg'] = pf_ebay[['cltr','ebay_l5']].mean(axis=1) # ebayl5_cltr_avg
+
     # save
-    # pf_ebay.sort_values('p_ebay_median_high', ascending=False)
     pf_ebay.to_csv(pf_ebay_loc, index=False)
     driver.close()
     pass
@@ -266,8 +306,7 @@ def update_vc():
                             }
               }
 
-
-    pfs = ['Australia only','Worldwide']
+    pfs = ['Australia only'] #,'Worldwide']
     pf_loc = rf'{Path.cwd()}/saved_data/port_cltr.csv' # collectr port
 
     driver = get_chrome_driver(headless=False, use_local=True, max_window=True)
@@ -278,10 +317,9 @@ def update_vc():
         last_update_dt = pd.to_datetime(os.path.getmtime(pf_loc), unit="s")
         if (last_update_dt.date() < pd.Timestamp.now().date()) | update_pf_loc:
             export_collectr_port(port_url, pf_loc, driver)
-            driver.close()
     else:
         export_collectr_port(port_url, pf_loc, driver)
-        driver.close()
+    driver.close()
 
     for pf in pfs:
         fn_sfx = params[pf]['fn_sfx']
@@ -295,7 +333,6 @@ def update_vc():
         update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc,
                        update_lsts_only=False, detect_rarity=detect_rarity, item_loc=item_loc)
     pass
-
 
 def merge_vc_wrld():
     fn_vc = rf'{Path.cwd()}/saved_data/port_cltr_ebay_vc.csv'
@@ -320,13 +357,14 @@ def merge_vc_wrld():
 
 if __name__ == '__main__':
     # update_vc()
-    # merge_vc_wrld()
+    #merge_vc_wrld()
 
-    _export_collectr_pf = False #True
+    _export_collectr_pf = True
     _update_pf_ebay = True
+    sch_phrase_only = False #True
 
     # save locs - AU
-    fn_sfx = 'paf'
+    fn_sfx = 'vc_021026'
     item_loc = 'Australia only'
     detect_rarity = False
 
@@ -339,7 +377,7 @@ if __name__ == '__main__':
     if _export_collectr_pf:
         driver = get_chrome_driver(headless=False, use_local=True, max_window=True)
         port_url = r'https://app.getcollectr.com/showcase/profile/24ba5413-66b8-4eb4-a5c3-fb93cd6480e0'
-        #port_url = r'https://app.getcollectr.com/showcase/profile/imsubtle'
+        #port_url = r'https://app.getcollectr.com/showcase/profile/jamesb89'
         export_collectr_port(port_url, pf_loc, driver)
         driver.close()
         pass
@@ -347,6 +385,7 @@ if __name__ == '__main__':
     # 2)
     if _update_pf_ebay:
         update_pf_ebay(pf_loc, pf_ebay_loc, pf_ebay_lsts_loc,
-                       update_lsts_only=False, detect_rarity=detect_rarity, item_loc=item_loc)
+                       update_lsts_only=False, detect_rarity=detect_rarity, item_loc=item_loc,
+                       export_sch_phrase_only=sch_phrase_only)
     pass
 
